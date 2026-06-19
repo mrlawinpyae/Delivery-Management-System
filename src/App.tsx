@@ -1,10 +1,9 @@
-import { Button } from "@/components/ui/button"
+import { RouterProvider } from "react-router-dom"
+import { router } from "./routes/AppRoutes"
 
-export function App() {
+function App() {
   return (
-    <>
-      <Button variant={"link"}>Button</Button>
-    </>
+    <RouterProvider router={router} />
   )
 }
 
