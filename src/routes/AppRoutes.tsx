@@ -5,6 +5,7 @@ import RiderLayout from "../apps/rider/RiderLayout"
 import RestaurantMenu from "@/apps/customer/pages/RestaurantMenu"
 import BrowseRestaurants from "@/apps/customer/pages/BrowseRestaurants"
 import CheckoutPage from "@/apps/customer/pages/CheckoutPage"
+import DeliveryInfoPage from "@/apps/customer/pages/DeliveryInfoPage"
 
 export const router = createBrowserRouter([
   {
@@ -25,8 +26,12 @@ export const router = createBrowserRouter([
         element: <RestaurantMenu />,
       },
       {
-        path: "checkout", 
+        path: "checkout",
         element: <CheckoutPage />,
+      },
+      {
+        path: "delivery-info",
+        element: <DeliveryInfoPage />,
       },
     ],
   },
