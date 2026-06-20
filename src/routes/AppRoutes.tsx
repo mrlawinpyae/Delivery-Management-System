@@ -4,6 +4,7 @@ import MerchantLayout from "../apps/merchant/MerchantLayout"
 import RiderLayout from "../apps/rider/RiderLayout"
 import RestaurantMenu from "@/apps/customer/pages/RestaurantMenu"
 import BrowseRestaurants from "@/apps/customer/pages/BrowseRestaurants"
+import CheckoutPage from "@/apps/customer/pages/CheckoutPage"
 
 export const router = createBrowserRouter([
   {
@@ -17,13 +18,15 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "",
-
         element: <BrowseRestaurants />,
       },
       {
         path: "restaurant/:id",
-
         element: <RestaurantMenu />,
+      },
+      {
+        path: "checkout", 
+        element: <CheckoutPage />,
       },
     ],
   },

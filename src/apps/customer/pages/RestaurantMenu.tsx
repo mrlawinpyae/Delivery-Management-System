@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Plus, Minus, AlertCircle } from "lucide-react"
 
 import { useRestaurantDetails } from "../hooks/useRestaurants"
+import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -12,12 +13,15 @@ export default function RestaurantMenu() {
   const navigate = useNavigate()
 
   const { data: restaurant, isLoading, error } = useRestaurantDetails(id)
-  const [quantities, setQuantities] = useState<Record<string, number>>({})
 
-  // Error state အတွက် timer
+  // Zustand Cart Store
+  const cartItems = useCartStore((state) => state.items)
+  const addToCart = useCartStore((state) => state.addToCart)
+  const removeFromCart = useCartStore((state) => state.removeFromCart)
+
   const [seconds, setSeconds] = useState(3)
 
-  // Auto-redirect logic
+  // Auto-redirect logic for error
   useEffect(() => {
     if (error || !restaurant) {
       if (seconds > 0) {
@@ -29,14 +33,18 @@ export default function RestaurantMenu() {
     }
   }, [seconds, error, restaurant, navigate])
 
-  const handleIncrement = (itemId: string) => {
-    setQuantities((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }))
+  const handleIncrement = (item: any) => {
+    addToCart({
+      itemId: item.itemId,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      image: item.image || "",
+    })
   }
 
   const handleDecrement = (itemId: string) => {
-    if (quantities[itemId] > 0) {
-      setQuantities((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }))
-    }
+    removeFromCart(itemId)
   }
 
   if (isLoading) {
@@ -47,7 +55,6 @@ export default function RestaurantMenu() {
     )
   }
 
-  // Modern Error Template
   if (error || !restaurant) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center gap-6 p-6 text-center">
@@ -82,8 +89,8 @@ export default function RestaurantMenu() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
-      {/* ─── Back Link & Shop Profile Banner ─── */}
+    <div className="mx-auto max-w-4xl space-y-8 p-4">
+      {/* Back Link & Shop Profile Banner */}
       <div className="space-y-4">
         <Link
           to="/customer"
@@ -96,37 +103,28 @@ export default function RestaurantMenu() {
           <span>Back to Discover</span>
         </Link>
 
-        {/* Banner */}
-
-        <div className="relative mb-8 space-y-4">
-          {/* Full-width Image Banner */}
-          <div className="relative h-60 w-full overflow-hidden rounded-3xl">
-            <img
-              src={
-                restaurant.image ||
-                "https://placehold.co/1200x400?text=Restaurant+Banner"
-              }
-              alt={restaurant.name}
-              className="h-full w-full object-cover"
-            />
-            {/* Dark Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            {/* Text Overlay */}
-            <div className="absolute bottom-0 left-0 p-8 text-white">
-              <h1 className="font-serif text-3xl font-bold tracking-tight md:text-4xl">
-                {restaurant.name}
-              </h1>
-              <p className="mt-2 text-sm font-light text-zinc-200">
-                {restaurant.address} • Premium UCSM Standard
-              </p>
-            </div>
+        <div className="relative h-60 w-full overflow-hidden rounded-3xl">
+          <img
+            src={
+              restaurant.image ||
+              "https://placehold.co/1200x400?text=Restaurant+Banner"
+            }
+            alt={restaurant.name}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 p-8 text-white">
+            <h1 className="font-serif text-3xl font-bold tracking-tight md:text-4xl">
+              {restaurant.name}
+            </h1>
+            <p className="mt-2 text-sm font-light text-zinc-200">
+              {restaurant.address} • Premium UCSM Standard
+            </p>
           </div>
         </div>
       </div>
 
-      {/* ─── Menus List Section ─── */}
-      {/* ─── Menus List Section ─── */}
+      {/* Menus List Section */}
       <div className="space-y-6">
         <div className="border-b border-zinc-100 pb-3">
           <h2 className="text-xs font-semibold tracking-widest text-zinc-400 uppercase">
@@ -135,9 +133,9 @@ export default function RestaurantMenu() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {/* API ကလာတဲ့ data ကို mapping လုပ်ခြင်း */}
           {(restaurant?.menuItems || []).map((item: any, index: number) => {
-            const currentQty = quantities[item.itemId] || 0
+            const currentQty = cartItems[item.itemId]?.quantity || 0
+
             return (
               <motion.div
                 key={item.itemId}
@@ -146,7 +144,6 @@ export default function RestaurantMenu() {
                 transition={{ duration: 0.3, delay: index * 0.04 }}
                 className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200/60 bg-white transition-all hover:border-zinc-300 hover:shadow-md"
               >
-                {/* Menu Image */}
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
                   <img
                     loading="lazy"
@@ -166,7 +163,6 @@ export default function RestaurantMenu() {
                   )}
                 </div>
 
-                {/* Menu Content */}
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-4 flex-1 space-y-2">
                     <h3 className="line-clamp-1 font-serif text-lg font-bold text-zinc-900">
@@ -177,7 +173,6 @@ export default function RestaurantMenu() {
                     </p>
                   </div>
 
-                  {/* Price & Actions */}
                   <div className="mt-auto flex items-center justify-between border-t border-zinc-100 pt-4">
                     <span className="font-semibold text-zinc-900 md:text-lg">
                       {item.price.toLocaleString()}
@@ -189,29 +184,23 @@ export default function RestaurantMenu() {
                     {/* Action Buttons */}
                     {currentQty === 0 ? (
                       <button
-                        onClick={() => handleIncrement(item.itemId)}
+                        onClick={() => handleIncrement(item)}
                         disabled={!item.isAvailable}
-                        className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:cursor-pointer hover:bg-zinc-800 active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 active:scale-95 disabled:opacity-50"
                       >
-                        <Plus size={14} /> Add
+                         Add
                       </button>
                     ) : (
-                      <div className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1 shadow-sm">
-                        <button
-                          onClick={() => handleDecrement(item.itemId)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 hover:cursor-pointer hover:bg-zinc-200"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="min-w-[16px] text-center text-xs font-bold text-zinc-900">
-                          {currentQty}
+                      <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-700">
+                        <span className="text-xs font-bold">
+                          In Cart ({currentQty})
                         </span>
-                        <button
-                          onClick={() => handleIncrement(item.itemId)}
-                          className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-white hover:cursor-pointer hover:bg-zinc-800"
+                        <Link
+                          to="/customer/checkout"
+                          className="text-[10px] underline hover:text-emerald-900"
                         >
-                          <Plus size={14} />
-                        </button>
+                          View
+                        </Link>
                       </div>
                     )}
                   </div>
