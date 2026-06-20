@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom"
 import CustomerLayout from "../apps/customer/CustomerLayout"
 import MerchantLayout from "../apps/merchant/MerchantLayout"
 import RiderLayout from "../apps/rider/RiderLayout"
+import RestaurantMenu from "@/apps/customer/pages/RestaurantMenu"
+import BrowseRestaurants from "@/apps/customer/pages/BrowseRestaurants"
 
 export const router = createBrowserRouter([
   {
@@ -13,38 +15,16 @@ export const router = createBrowserRouter([
     path: "/customer",
     element: <CustomerLayout />,
     children: [
-      // {
-      //   path: "",
-      //   element: <RestaurantMenu />,
-      // },
-      // {
-      //   path: "login",
-      //   element: <CustomerLogin />,
-      // },
-      // {
-      //   path: "checkout", 
-      //   element: <CheckoutPage />,
-      // },
-      //   {
-      //     path: "", // 1. ဆိုင်တွေအကုန်လုံး Browse လုပ်မယ့် အိမ်စာမျက်နှာ
-      //     element: <BrowseRestaurants />,
-      //   },
-      //   {
-      //     path: "restaurant/:id", // 2. ဆိုင်တစ်ခုချင်းစီရဲ့ Menu ပြမယ့်စာမျက်နှာ (Dynamic ID)
-      //     element: <RestaurantMenu />,
-      //   },
-      //   {
-      //     path: "checkout", // 3. ဖုန်းနံပါတ်နှင့် မြေပုံတည်နေရာထည့်ပြီး အော်ဒါတင်မယ့်စာမျက်နှာ
-      //     element: <CheckoutPage />,
-      //   },
-      //   {
-      //     path: "profile", // 4. Profile နှင့် မှာယူခဲ့ဖူးသော ရာဇဝင်ကြည့်ရန် စာမျက်နှာ
-      //     element: <CustomerProfile />,
-      //   },
-      //   {
-      //     path: "login", // 5. အကောင့်မရှိလျှင် ဝင်ခိုင်းမည့် စာမျက်နှာ
-      //     element: <CustomerLogin />,
-      //   }
+      {
+        path: "",
+
+        element: <BrowseRestaurants />,
+      },
+      {
+        path: "restaurant/:id",
+
+        element: <RestaurantMenu />,
+      },
     ],
   },
   // --- APP B: Merchant Routes ---

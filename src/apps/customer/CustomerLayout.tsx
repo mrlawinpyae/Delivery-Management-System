@@ -1,7 +1,7 @@
 // src/apps/customer/CustomerLayout.tsx
 import { Outlet, Link, useLocation } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, User, Compass, ChevronDown } from "lucide-react"
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion"
+import { ShoppingBag, User, Compass, ChevronDown } from "lucide-react"
 
 // Shadcn UI Components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,6 +17,15 @@ import {
 export default function CustomerLayout() {
   const location = useLocation()
 
+  // ─── 📜 SCROLL PROGRESS ENGINE ───
+  const { scrollYProgress } = useScroll()
+  // useSpring သုံးခြင်းဖြင့် progress bar ပြေးတာ ပိုမိုညင်သာပြီး အိအိလေး သွားစေပါမည်
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  })
+
   // ရှင်းလင်းထားသော Core Navigation Items
   const navItems = [
     { path: "/customer", label: "Discover", icon: Compass },
@@ -28,7 +37,7 @@ export default function CustomerLayout() {
     <div className="flex min-h-screen flex-col bg-[#F9F9FB] font-sans text-zinc-900 antialiased">
       {/* ─── LUXURY FLOATING TOP NAVBAR ─── */}
       <header className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/70 px-4 backdrop-blur-xl transition-all md:px-8">
-        <div className="container mx-auto flex h-20 items-center justify-between">
+        <div className="relative container mx-auto flex h-20 items-center justify-between">
           {/* Elite Elegant Logo */}
           <Link to="/customer" className="group flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 font-serif text-base font-bold tracking-tighter text-white transition-transform group-hover:rotate-6">
@@ -118,6 +127,13 @@ export default function CustomerLayout() {
             </Avatar>
           </div>
         </div>
+
+        {/* ─── ✨ LINEAR PROGRESS BAR INJECTED ─── */}
+        {/* Navbar ရဲ့ အောက်ခြေ line ကပ်လျက်မှာ ဘယ်ကနေညာသို့ အိအိလေး လိုက်ပြေးမည့် အမျှင်တန်း */}
+        <motion.div
+          className="absolute right-0 bottom-0 left-0 h-[1.5px] origin-[0%] bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500"
+          style={{ scaleX }}
+        />
       </header>
 
       {/* ─── MAIN CONTENT AREA ─── */}

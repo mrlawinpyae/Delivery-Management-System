@@ -128,3 +128,24 @@
     @apply font-sans;
     }
 }
+
+
+
+/* ─── REMOVE SCROLLBAR COMPLETELY (HIDDEN BUT SCROLLABLE) ─── */
+
+/* Chrome, Safari, Opera နဲ့ Edge ဘရောက်ဇာများအတွက် Scrollbar ဖျောက်ခြင်း */
+::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Firefox ဘရောက်ဇာအတွက် Scrollbar ဖျောက်ခြင်း */
+* {
+  scrollbar-width: none;
+}
+
+/* IE နဲ့ Edge အဟောင်းများအတွက် Scrollbar ဖျောက်ခြင်း */
+* {
+  -ms-overflow-style: none;
+}

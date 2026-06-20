@@ -10,17 +10,20 @@ export type OrderStatus =
 export interface User {
   _id: string
   name: string
+  image: string // ထည့်သွင်းထားသည်
   phone: string
   email: string
+  passwordHash: string
   role: UserRole
   createdAt: string
-  token?: string // Frontend session အတွက် ထပ်ဖြည့်ထားခြင်း
+  token?: string
 }
 
 export interface MenuItem {
   itemId: string
   name: string
   description: string
+  image: string
   price: number
   isAvailable: boolean
 }
@@ -29,10 +32,11 @@ export interface Restaurant {
   _id: string
   name: string
   ownerId: string
+  image: string
   address: string
   location: {
     type: "Point"
-    coordinates: [number, number] // [Longitude, Latitude]
+    coordinates: [number, number]
   }
   menuItems: MenuItem[]
 }
@@ -40,6 +44,7 @@ export interface Restaurant {
 export interface OrderItem {
   itemId: string
   name: string
+  image: string // Checkout မှာ ပြဖို့အတွက် ထည့်ထားသင့်သည်
   quantity: number
   priceAtPurchase: number
 }
@@ -56,6 +61,7 @@ export interface Order {
     latitude: number
     longitude: number
   }
+  shipping_phone: number 
   items: OrderItem[]
   createdAt: string
 }
