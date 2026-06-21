@@ -10,7 +10,7 @@ export type OrderStatus =
 export interface User {
   _id: string
   name: string
-  image: string // ထည့်သွင်းထားသည်
+  image: string 
   phone: string
   email: string
   passwordHash: string
