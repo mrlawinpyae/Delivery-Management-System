@@ -44,7 +44,7 @@ export interface Restaurant {
 export interface OrderItem {
   itemId: string
   name: string
-  image: string // Checkout မှာ ပြဖို့အတွက် ထည့်ထားသင့်သည်
+  image: string 
   quantity: number
   priceAtPurchase: number
 }
@@ -61,7 +61,7 @@ export interface Order {
     latitude: number
     longitude: number
   }
-  shipping_phone: number 
+  shipping_phone: string
   items: OrderItem[]
   createdAt: string
 }

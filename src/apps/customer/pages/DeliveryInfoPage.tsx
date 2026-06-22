@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   MapPin,
@@ -17,6 +17,7 @@ import {
   parseCountry,
 } from "react-international-phone"
 import "react-international-phone/style.css"
+import { toast, Toaster } from "sonner"
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet"
@@ -26,6 +27,9 @@ import L from "leaflet"
 // Marker icon setup so the default pin renders correctly
 import icon from "leaflet/dist/images/marker-icon.png"
 import iconShadow from "leaflet/dist/images/marker-shadow.png"
+import { useCartStore } from "@/store/useCartStore"
+import { useLocation } from "react-router-dom"
+
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -82,19 +86,6 @@ export default function DeliveryInfoPage() {
   const [locationError, setLocationError] = useState<string | null>(null)
   const mapRef = useRef<L.Map | null>(null)
 
-  const handleConfirm = () => {
-    // Run validation
-    const result = deliverySchema.safeParse({ phone, address })
-
-    // if (!result.success) {
-    //   setError(result.error.errors[0].message)
-    //   return
-    // }
-
-    setError(null)
-    console.log("Order confirmed:", result.data)
-    navigate("/order-success")
-  }
   const [position, setPosition] = useState<[number, number]>(MAGWAY_CENTER)
 
   // Marker is now fixed in place — it only moves when the user taps
@@ -160,9 +151,102 @@ export default function DeliveryInfoPage() {
       }
     )
   }
+  const { items } = useCartStore()
 
+  // Position ပြောင်းတိုင်း Address အလိုအလျောက် ရယူရန်
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const [lat, lng] = position
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+        )
+        const data = await res.json()
+        setAddress(data.display_name || "Unknown Location")
+      } catch (err) {
+        setAddress("Location details unavailable")
+      }
+    }
+    fetchAddress()
+  }, [position])
+
+  const location = useLocation()
+  const { totalAmount } = location.state || { totalAmount: 0 }
+  // DeliveryInfoPage ထဲတွင်
+  if (!location.state) {
+    navigate("/customer/checkout")
+  }
+  const handleConfirm = async () => {
+    const result = deliverySchema.safeParse({ phone, address })
+
+    if (!result.success) {
+      toast.error(result.error.issues[0].message)
+      return
+    }
+
+    if (!address || address === "Unknown Location") {
+      toast.error("Please wait while we detect your location.")
+      return
+    }
+
+    // Success Message
+    toast.success("Order confirmed successfully!")
+
+    const orderData = {
+      customerId: "USER_ID_FROM_AUTH", // Auth ကရလာတဲ့ ID ထည့်ပါ
+      merchantId: "MERCHANT_ID", // Checkout မှာရတဲ့ ID
+      status: "PREPARING",
+      totalAmount,
+      deliveryLocation: {
+        address: address,
+        latitude: position[0],
+        longitude: position[1],
+      },
+      shipping_phone: phone,
+      items: Object.values(items).map((i) => ({
+        itemId: i.itemId,
+        name: i.name,
+        quantity: i.quantity,
+        priceAtPurchase: i.price,
+      })),
+      createdAt: new Date().toISOString(),
+    }
+
+    console.log("Sending to Backend:", orderData)
+    // ၄။ API Call ခေါ်ခြင်း
+    try {
+      const response = await fetch("/api/order/save-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success("Order confirmed successfully!")
+        console.log("Order Success:", data)
+
+        setTimeout(() => {
+          navigate("/customer/order-history", { replace: true })
+        }, 1500)
+      } else {
+        // Backend မှ Error ပြန်လာလျှင်
+        toast.error(data.error || "Failed to place order.")
+      }
+    } catch (error) {
+      // Network Error
+      toast.error("Network error. Please try again later.")
+    }
+  }
+
+  // ၁။ Page စရောက်တာနဲ့ Current Location ကို Auto တောင်းရန်
+  useEffect(() => {
+    handleUseCurrentLocation()
+  }, [])
   return (
     <div className="mx-auto w-full max-w-lg px-6 py-10">
+      <Toaster position="top-center" richColors />
       <h1 className="mb-2 font-serif text-2xl font-bold">
         Delivery Information
       </h1>
@@ -257,8 +341,10 @@ export default function DeliveryInfoPage() {
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
+          disabled={locating || !isWithinMagwayBounds(position[0], position[1])} // Location ရမှပဲ Button ပွင့်မယ်
         >
-          Confirm Order <ArrowRight size={18} className="ml-2" />
+          {locating ? "Locating..." : "Confirm Order"}{" "}
+          <ArrowRight size={18} className="ml-2" />
         </Button>
         <button
           onClick={() => navigate("/customer/checkout")}

@@ -82,6 +82,22 @@ mockRestaurants.forEach((shop) => {
     },
   ]
 })
+// Order များကို သိမ်းဆည်းရန် In-memory array
+const mockOrders: any[] = [
+  {
+    orderId: "ord_1003",
+    customerId: "usr_cust_001",
+    restaurantId: "merch_kky_09",
+    status: "PREPARING",
+    totalAmount: 9000.0,
+    deliveryAddress: "UCSM Hostel, Room 302",
+    items: [
+      { name: "Mohinga Special", quantity: 1, priceAtPurchase: 4500.0 },
+      { name: "Kyay Oh", quantity: 1, priceAtPurchase: 4500.0 },
+    ],
+    createdAt: "2026-06-17T13:50:00Z",
+  },
+]
 
 // ─── ၃။ API Handlers ───
 export const handlers = [
@@ -130,5 +146,24 @@ export const handlers = [
       },
       error: null,
     })
+  }),
+  
+  // 4. Make Order (API Contract 8)
+  http.post("/api/order/save-order", async ({ request }) => {
+    const body = (await request.json()) as any
+    const newOrder = {
+      orderId: "ord_" + Math.random().toString(36).substr(2, 5),
+      status: "PENDING",
+      ...body,
+    }
+    mockOrders.push(newOrder)
+    return HttpResponse.json(
+      {
+        message: "Order placed successfully",
+        data: { orderId: newOrder.orderId, status: "PENDING" },
+        error: null,
+      },
+      { status: 201 }
+    )
   }),
 ]
