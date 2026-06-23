@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware" 
+import { persist, createJSONStorage } from "zustand/middleware"
 
 interface CartItem {
   itemId: string
@@ -7,6 +7,7 @@ interface CartItem {
   price: number
   quantity: number
   image: string
+  restaurantId: string 
 }
 
 interface CartStore {
@@ -43,8 +44,8 @@ export const useCartStore = create<CartStore>()(
       clearCart: () => set({ items: {} }),
     }),
     {
-      name: "customer-cart-storage", 
-      storage: createJSONStorage(() => localStorage), 
+      name: "customer-cart-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 )

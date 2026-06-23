@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, Plus, Minus, AlertCircle } from "lucide-react"
+import { ArrowLeft, AlertCircle } from "lucide-react"
 
 import { useRestaurantDetails } from "../hooks/useRestaurants"
 import { useCartStore } from "../../../store/useCartStore"
@@ -17,7 +17,7 @@ export default function RestaurantMenu() {
   // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items)
   const addToCart = useCartStore((state) => state.addToCart)
-  const removeFromCart = useCartStore((state) => state.removeFromCart)
+  // const removeFromCart = useCartStore((state) => state.removeFromCart)
 
   const [seconds, setSeconds] = useState(3)
 
@@ -40,12 +40,13 @@ export default function RestaurantMenu() {
       price: item.price,
       quantity: 1,
       image: item.image || "",
+      restaurantId: id!,
     })
   }
 
-  const handleDecrement = (itemId: string) => {
-    removeFromCart(itemId)
-  }
+  // const handleDecrement = (itemId: string) => {
+  //   removeFromCart(itemId)
+  // }
 
   if (isLoading) {
     return (
@@ -188,7 +189,7 @@ export default function RestaurantMenu() {
                         disabled={!item.isAvailable}
                         className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 active:scale-95 disabled:opacity-50"
                       >
-                         Add
+                        Add
                       </button>
                     ) : (
                       <div className="flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-700">

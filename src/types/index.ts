@@ -1,5 +1,3 @@
-// src/types/index.ts
-
 export type UserRole = "CUSTOMER" | "RIDER" | "ADMIN"
 export type OrderStatus =
   | "PENDING"
@@ -10,7 +8,7 @@ export type OrderStatus =
 export interface User {
   _id: string
   name: string
-  image: string 
+  image: string
   phone: string
   email: string
   passwordHash: string
@@ -44,7 +42,6 @@ export interface Restaurant {
 export interface OrderItem {
   itemId: string
   name: string
-  image: string 
   quantity: number
   priceAtPurchase: number
 }
@@ -52,7 +49,7 @@ export interface OrderItem {
 export interface Order {
   _id: string
   customerId: string
-  merchantId: string
+  restaurantsId: Array<string>
   riderId: string | null
   status: OrderStatus
   totalAmount: number

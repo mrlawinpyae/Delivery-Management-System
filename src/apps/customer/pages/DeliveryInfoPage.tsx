@@ -172,10 +172,12 @@ export default function DeliveryInfoPage() {
 
   const location = useLocation()
   const { totalAmount } = location.state || { totalAmount: 0 }
+
   // DeliveryInfoPage ထဲတွင်
   if (!location.state) {
     navigate("/customer/checkout")
   }
+
   const handleConfirm = async () => {
     const result = deliverySchema.safeParse({ phone, address })
 
@@ -189,12 +191,17 @@ export default function DeliveryInfoPage() {
       return
     }
 
-    // Success Message
-    toast.success("Order confirmed successfully!")
+    const uniqueRestaurantIds = Array.from(
+      new Set(
+        Object.values(items)
+          .map((i) => i.restaurantId)
+          .filter((id) => id !== undefined) 
+      )
+    )
 
     const orderData = {
-      customerId: "USER_ID_FROM_AUTH", // Auth ကရလာတဲ့ ID ထည့်ပါ
-      merchantId: "MERCHANT_ID", // Checkout မှာရတဲ့ ID
+      customerId: "USER_ID_FROM_AUTH",
+      restaurantsId: uniqueRestaurantIds,
       status: "PREPARING",
       totalAmount,
       deliveryLocation: {
@@ -212,7 +219,7 @@ export default function DeliveryInfoPage() {
       createdAt: new Date().toISOString(),
     }
 
-    console.log("Sending to Backend:", orderData)
+    // console.log("Sending to Backend:", orderData)
     // ၄။ API Call ခေါ်ခြင်း
     try {
       const response = await fetch("/api/order/save-order", {

@@ -87,7 +87,7 @@ const mockOrders: any[] = [
   {
     orderId: "ord_1003",
     customerId: "usr_cust_001",
-    restaurantId: "merch_kky_09",
+    restaurantsId: ["merch_kky_09", "merch_cafe_01", "merch_sushi_01"],
     status: "PREPARING",
     totalAmount: 9000.0,
     deliveryAddress: "UCSM Hostel, Room 302",
