@@ -1,3 +1,4 @@
+import axios from "axios"
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
@@ -85,6 +86,7 @@ export default function DeliveryInfoPage() {
   const [locating, setLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const mapRef = useRef<L.Map | null>(null)
+  const { items, clearCart } = useCartStore()
 
   const [position, setPosition] = useState<[number, number]>(MAGWAY_CENTER)
 
@@ -151,7 +153,6 @@ export default function DeliveryInfoPage() {
       }
     )
   }
-  const { items } = useCartStore()
 
   // Position ပြောင်းတိုင်း Address အလိုအလျောက် ရယူရန်
   useEffect(() => {
@@ -195,7 +196,7 @@ export default function DeliveryInfoPage() {
       new Set(
         Object.values(items)
           .map((i) => i.restaurantId)
-          .filter((id) => id !== undefined) 
+          .filter((id) => id !== undefined)
       )
     )
 
@@ -219,31 +220,26 @@ export default function DeliveryInfoPage() {
       createdAt: new Date().toISOString(),
     }
 
-    // console.log("Sending to Backend:", orderData)
-    // ၄။ API Call ခေါ်ခြင်း
     try {
-      const response = await fetch("/api/order/save-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      })
+      // Axios သုံးထားခြင်း
+      const response = await axios.post("/api/order/save-order", orderData)
 
-      const data = await response.json()
+      // Axios က response.data မှာ JSON ကို အသင့်ပေးထားပြီးသားပါ
+      const data = response.data
 
-      if (response.ok) {
-        toast.success("Order confirmed successfully!")
-        console.log("Order Success:", data)
-
-        setTimeout(() => {
-          navigate("/customer/order-history", { replace: true })
-        }, 1500)
-      } else {
-        // Backend မှ Error ပြန်လာလျှင်
-        toast.error(data.error || "Failed to place order.")
-      }
-    } catch (error) {
-      // Network Error
-      toast.error("Network error. Please try again later.")
+      toast.success("Order confirmed successfully!")
+      console.log("Order Success:", data)
+      clearCart()
+      setTimeout(() => {
+        navigate("/customer/order-history", { replace: true })
+      }, 1500)
+    } catch (error: any) {
+      // Axios က Error တွေကို catch ထဲ တန်းရောက်ပါတယ်
+      // Backend က ပြန်လာတဲ့ message ကို error.response.data ကနေ ယူနိုင်ပါတယ်
+      const errorMessage =
+        error.response?.data?.error ||
+        "Failed to place order. Please try again."
+      toast.error(errorMessage)
     }
   }
 

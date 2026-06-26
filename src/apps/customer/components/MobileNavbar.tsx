@@ -1,47 +1,99 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { useNavItems } from "./CustomerNavbar" // အရင်က ခွဲထားတဲ့ items တွေကို ပြန်သုံးပါ
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ChevronDown } from "lucide-react"
 export default function MobileNavbar() {
   const location = useLocation()
   const navItems = useNavItems()
   return (
-    <div className="fixed right-4 bottom-4 left-4 z-50 md:hidden">
-      <div className="flex items-center justify-around rounded-3xl border border-zinc-200/60 bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = location.pathname === item.path
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="relative flex flex-col items-center gap-1 rounded-2xl px-4 py-2.5 transition-all"
-            >
-              <Icon
-                size={18}
-                className={`transition-colors duration-200 ${
-                  isActive ? "text-zinc-900" : "text-zinc-400"
-                }`}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+    <>
+      {/* 1. Top Header: Logo + Profile */}
+      <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-6 backdrop-blur-md md:hidden">
+        <Link to="/customer" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 font-serif font-bold text-white">
+            D
+          </div>
+          <span className="font-serif text-lg font-semibold">
+            deliv<span className="font-light text-zinc-400">x</span>
+          </span>
+        </Link>
 
-              {item.badge && (
-                <span className="absolute top-1.5 right-3 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-zinc-950 px-1 text-[8px] font-bold text-white">
-                  {item.badge}
-                </span>
-              )}
-
-              {isActive && (
-                <motion.div
-                  layoutId="luxuryMobileDot"
-                  className="absolute bottom-1 h-1 w-1 rounded-full bg-zinc-900"
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:bg-zinc-100">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src="https://github.com/shadcn.png" />
+              <AvatarFallback>TR</AvatarFallback>
+            </Avatar>
+            <ChevronDown size={12} className="text-zinc-400" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="mt-2 w-40 rounded-2xl p-2"
+          >
+            <DropdownMenuLabel className="text-[10px] text-zinc-400 uppercase">
+              Account
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <Link to="/customer/order-history">
+              <DropdownMenuItem className="cursor-pointer py-2 text-xs">
+                Order History
+              </DropdownMenuItem>
             </Link>
-          )
-        })}
+            <DropdownMenuItem className="cursor-pointer py-2 text-xs">
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer py-2 text-xs text-red-600">
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
+      {/* 2. Bottom Navigation */}
+      <div className="fixed right-4 bottom-4 left-4 z-50 md:hidden">
+        <div className="flex items-center justify-around rounded-3xl border border-zinc-200/60 bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = location.pathname === item.path
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className="relative flex flex-col items-center gap-1 rounded-2xl px-4 py-2.5 transition-all"
+              >
+                <Icon
+                  size={18}
+                  className={`transition-colors duration-200 ${isActive ? "text-zinc-900" : "text-zinc-400"}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute top-1.5 right-3 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-zinc-950 px-1 text-[8px] font-bold text-white">
+                    {item.badge}
+                  </span>
+                )}
+                {isActive && (
+                  <motion.div
+                    layoutId="luxuryMobileDot"
+                    className="absolute bottom-1 h-1 w-1 rounded-full bg-zinc-900"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </Link>
+            )
+          })}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

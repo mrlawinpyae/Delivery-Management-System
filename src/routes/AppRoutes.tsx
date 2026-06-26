@@ -7,7 +7,7 @@ import BrowseRestaurants from "@/apps/customer/pages/BrowseRestaurants"
 import CheckoutPage from "@/apps/customer/pages/CheckoutPage"
 import DeliveryInfoPage from "@/apps/customer/pages/DeliveryInfoPage"
 import OrderHistoryPage from "@/apps/customer/pages/OrderHistoryPage"
-
+import OrderDetailsPage from "@/apps/customer/pages/OrderDetailsPage"
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: "order-history",
         element: <OrderHistoryPage />,
+      },
+      {
+        path: "order/:id",
+        element: <OrderDetailsPage />,
       },
     ],
   },

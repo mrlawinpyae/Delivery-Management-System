@@ -23,11 +23,12 @@ export const useNavItems = () => {
 
   return [
     { path: "/customer", label: "Discover", icon: Compass },
+
     {
       path: "/customer/checkout",
       label: "Cart",
       icon: ShoppingBag,
-      badge: totalItems,
+      badge: totalItems > 0 ? totalItems : undefined,
     },
     { path: "/customer/login", label: "Account", icon: User },
   ]
@@ -62,7 +63,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
               >
                 <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
                 <span>{item.label}</span>
-                {item.badge && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white">
                     {item.badge}
                   </span>
@@ -97,6 +98,11 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
                 My Premium Account
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <Link to="/customer/order-history">
+                <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
+                  Order History
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
                 Profile Settings
               </DropdownMenuItem>

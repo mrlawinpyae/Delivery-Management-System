@@ -147,23 +147,103 @@ export const handlers = [
       error: null,
     })
   }),
-  
+
   // 4. Make Order (API Contract 8)
+  // http.post("/api/order/save-order", async ({ request }) => {
+  //   const body = (await request.json()) as any
+  //   const newOrder = {
+  //     orderId: "ord_" + Math.random().toString(36).substr(2, 5),
+  //     status: "PENDING",
+  //     ...body,
+  //   }
+  //   mockOrders.push(newOrder)
+  //   return HttpResponse.json(
+  //     {
+  //       message: "Order placed successfully",
+  //       data: { orderId: newOrder.orderId, status: "PENDING" },
+  //       error: null,
+  //     },
+  //     { status: 201 }
+  //   )
+  // }),
   http.post("/api/order/save-order", async ({ request }) => {
     const body = (await request.json()) as any
+
+    // 1. လက်ရှိ LocalStorage ထဲက အော်ဒါတွေကို အရင်ယူမယ်
+    const existingOrders = JSON.parse(
+      localStorage.getItem("mock_orders") || "[]"
+    )
+
+    // 2. အော်ဒါအသစ် ဖန်တီးမယ်
     const newOrder = {
-      orderId: "ord_" + Math.random().toString(36).substr(2, 5),
-      status: "PENDING",
+      _id: "ord_" + Math.random().toString(36).substr(2, 5),
+      status: "PREPARING", // Backend က ပေးတဲ့ initial status
       ...body,
     }
-    mockOrders.push(newOrder)
+
+    // 3. Array အသစ်ထဲကို Push လုပ်မယ်
+    existingOrders.push(newOrder)
+
+    // 4. LocalStorage ထဲကို ပြန်သိမ်းမယ်
+    localStorage.setItem("mock_orders", JSON.stringify(existingOrders))
+
     return HttpResponse.json(
       {
         message: "Order placed successfully",
-        data: { orderId: newOrder.orderId, status: "PENDING" },
+        data: { orderId: newOrder.orderId, status: "PREPARING" },
         error: null,
       },
       { status: 201 }
     )
+  }),
+
+  // 5. Order History ကို ပြန်ဆွဲထုတ်ဖို့ Handler အသစ်တစ်ခု ထပ်ထည့်ပေးရမယ်
+  http.get("/api/orders/getUserOrders/:userId", () => {
+    const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
+    return HttpResponse.json({
+      message: "Orders fetched successfully",
+      data: savedOrders,
+      error: null,
+    })
+  }),
+
+  // 7. Get Order Details
+  http.get("/api/orders/getOrderDetails/:orderId", ({ params }) => {
+    const { orderId } = params as { orderId: string }
+
+    // LocalStorage ထဲက အော်ဒါများအားလုံးကို ထုတ်ယူ
+    const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
+
+    // orderId နဲ့ ကိုက်ညီတဲ့ အော်ဒါကို ရှာဖွေခြင်း
+    // (မှတ်ချက်: မင်းရဲ့ save-order မှာ _id နဲ့ သိမ်းထားရင် ဒီနေရာမှာ o._id နဲ့ စစ်ပါ)
+    const order = savedOrders.find(
+      (o: any) => o._id === orderId || o.orderId === orderId
+    )
+
+    if (!order) {
+      return HttpResponse.json(
+        {
+          message: "Order not found",
+          data: null,
+          error: "Invalid order ID",
+        },
+        { status: 404 }
+      )
+    }
+
+    // API Contract အတိုင်း ပြန်ပေးခြင်း
+    return HttpResponse.json({
+      message: "Order details fetched",
+      data: {
+        orderId: order.orderId || order._id,
+        restaurantId: order.restaurantId || "merch_kky_09", // Mock data အတွက် default
+        status: order.status,
+        totalAmount: order.totalAmount,
+        deliveryAddress:
+          order.deliveryAddress || order.deliveryLocation?.address,
+        items: order.items,
+      },
+      error: null,
+    })
   }),
 ]
