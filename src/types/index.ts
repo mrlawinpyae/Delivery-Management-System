@@ -53,6 +53,7 @@ export interface Order {
   riderId: string | null
   status: OrderStatus
   totalAmount: number
+  deliveryAddress: string
   deliveryLocation: {
     address: string
     latitude: number

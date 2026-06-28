@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Search } from "lucide-react"
+import { useSearch } from "@/context/SearchContext"
 export default function MobileNavbar() {
   const location = useLocation()
   const navItems = useNavItems()
+  const { toggleSearch } = useSearch()
   return (
     <>
       {/* 1. Top Header: Logo + Profile */}
@@ -28,36 +30,48 @@ export default function MobileNavbar() {
           </span>
         </Link>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:bg-zinc-100">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>TR</AvatarFallback>
-            </Avatar>
-            <ChevronDown size={12} className="text-zinc-400" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="mt-2 w-40 rounded-2xl p-2"
+        {/* Right Section: Search & Profile */}
+        <div className="flex items-center gap-3">
+          {/* Mobile Search Button */}
+          <button
+            onClick={toggleSearch}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-100 bg-zinc-50 text-zinc-600 transition-all hover:bg-zinc-100 active:scale-95"
           >
-            <DropdownMenuLabel className="text-[10px] text-zinc-400 uppercase">
-              Account
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <Link to="/customer/order-history">
+            <Search size={16} />
+          </button>
+
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>TR</AvatarFallback>
+              </Avatar>
+              <ChevronDown size={12} className="text-zinc-400" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="mt-2 w-40 rounded-2xl p-2"
+            >
+              <DropdownMenuLabel className="text-[10px] text-zinc-400 uppercase">
+                Account
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link to="/customer/order-history">
+                <DropdownMenuItem className="cursor-pointer py-2 text-xs">
+                  Order History
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="cursor-pointer py-2 text-xs">
-                Order History
+                Profile Settings
               </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem className="cursor-pointer py-2 text-xs">
-              Profile Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer py-2 text-xs text-red-600">
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer py-2 text-xs text-red-600">
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
 
       {/* 2. Bottom Navigation */}
