@@ -95,7 +95,7 @@ export default function RestaurantMenu() {
       <div className="space-y-4">
         <Link
           to="/customer"
-          className="group inline-flex items-center gap-2 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-900"
+          className="group inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-900 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 hover:shadow-md active:scale-95"
         >
           <ArrowLeft
             size={14}
