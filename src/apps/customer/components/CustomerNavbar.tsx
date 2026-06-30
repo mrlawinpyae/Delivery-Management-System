@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useCartStore } from "../../../store/useCartStore"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useSearch } from "@/context/SearchContext"
 
 export const useNavItems = () => {
@@ -24,7 +24,6 @@ export const useNavItems = () => {
 
   return [
     { path: "/customer", label: "Discover", icon: Compass },
-
     {
       path: "/customer/checkout",
       label: "Cart",
@@ -40,7 +39,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
   const navItems = useNavItems()
   const { isSearchOpen, toggleSearch, searchTerm, setSearchTerm } = useSearch()
   const searchRef = useRef<HTMLDivElement>(null)
-  // Search box အပြင်ဘက်ကို နှိပ်ရင် ပိတ်သွားအောင်
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -61,7 +60,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
     }
   }
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/70 px-4 backdrop-blur-xl transition-all md:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/70 px-4 backdrop-blur-xl transition-all md:px-8 hidden md:block">
       <div className="relative container mx-auto flex h-20 items-center justify-between">
         {/* Search Modal */}
         <AnimatePresence>

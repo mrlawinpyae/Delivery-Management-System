@@ -43,7 +43,7 @@ export default function BrowseRestaurants() {
           {/* Use filteredRestaurants instead of restaurantList */}
           <AnimatePresence mode="popLayout">
             {filteredRestaurants.length > 0 ? (
-              filteredRestaurants.map((shop: any, index: number) => (
+              filteredRestaurants.map((shop: any) => (
                 <motion.div
                   key={shop._id}
                   layout // Enables smooth reordering animations

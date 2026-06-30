@@ -82,7 +82,6 @@ export default function DeliveryInfoPage() {
   const navigate = useNavigate()
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
-  const [error, setError] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -336,15 +335,13 @@ export default function DeliveryInfoPage() {
             <p className="text-sm font-medium text-red-500">{locationError}</p>
           )}
         </div>
-
-        {error && <p className="text-sm font-medium text-red-500">{error}</p>}
       </div>
 
       <div className="mt-10">
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
-          disabled={locating || !isWithinMagwayBounds(position[0], position[1])} // Location ရမှပဲ Button ပွင့်မယ်
+          disabled={locating || !isWithinMagwayBounds(position[0], position[1])} 
         >
           {locating ? "Locating..." : "Confirm Order"}{" "}
           <ArrowRight size={18} className="ml-2" />

@@ -39,7 +39,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Heading */}
+     
 
       <h1 className="mb-6 font-serif text-2xl font-bold text-zinc-900 sm:text-3xl">
         Your Order

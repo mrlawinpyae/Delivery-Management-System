@@ -42,6 +42,7 @@ export interface Restaurant {
 export interface OrderItem {
   itemId: string
   name: string
+  image: string
   quantity: number
   priceAtPurchase: number
 }

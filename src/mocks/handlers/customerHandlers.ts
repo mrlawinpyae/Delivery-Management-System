@@ -83,7 +83,7 @@ mockRestaurants.forEach((shop) => {
   ]
 })
 // Order များကို သိမ်းဆည်းရန် In-memory array
-const mockOrders: any[] = [
+export const mockOrders: any[] = [
   {
     orderId: "ord_1003",
     customerId: "usr_cust_001",

@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavItems } from "./CustomerNavbar" // အရင်က ခွဲထားတဲ့ items တွေကို ပြန်သုံးပါ
 import {
   DropdownMenu,
@@ -13,10 +14,31 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChevronDown, Search } from "lucide-react"
 import { useSearch } from "@/context/SearchContext"
-export default function MobileNavbar() {
+
+export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
   const location = useLocation()
   const navItems = useNavItems()
-  const { toggleSearch } = useSearch()
+  const { isSearchOpen, toggleSearch, searchTerm, setSearchTerm } = useSearch()
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        if (isSearchOpen) toggleSearch()
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [isSearchOpen, toggleSearch])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      toggleSearch()
+    }
+  }
   return (
     <>
       {/* 1. Top Header: Logo + Profile */}
@@ -72,6 +94,40 @@ export default function MobileNavbar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Search Modal */}
+        <AnimatePresence>
+          {isSearchOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-20 right-0 left-0 z-50 flex justify-center px-4"
+            >
+              <div
+                ref={searchRef}
+                className="w-full max-w-lg rounded-2xl border border-zinc-100 bg-white p-2 shadow-2xl"
+              >
+                <input
+                  autoFocus
+                  className="w-full p-3 text-sm outline-none"
+                  placeholder="Search restaurants..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Custom scroll bar progress bar */}
+        {scaleX && (
+          <motion.div
+            className="absolute right-0 bottom-0 left-0 h-[1.5px] origin-[0%] bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500"
+            style={{ scaleX }}
+          />
+        )}
       </header>
 
       {/* 2. Bottom Navigation */}

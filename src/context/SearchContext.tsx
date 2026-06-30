@@ -4,7 +4,7 @@ const SearchContext = createContext({
   isSearchOpen: false,
   toggleSearch: () => {},
   searchTerm: "",
-  setSearchTerm: (term: string) => {},
+  setSearchTerm: (_term: string) => {},
 })
 
 export const SearchProvider = ({ children }: any) => {

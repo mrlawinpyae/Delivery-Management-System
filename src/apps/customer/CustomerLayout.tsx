@@ -24,7 +24,7 @@ export default function CustomerLayout() {
       <CustomerNavbar scaleX={scaleX} />
 
       {/* ─── MAIN CONTENT AREA ─── */}
-      <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-24 md:p-8 md:pb-12">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-20 pb-24 md:px-8 md:pt-8 md:pb-12">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -39,7 +39,7 @@ export default function CustomerLayout() {
       </main>
 
       {/* ─── MOBILE BOTTOM BAR ─── */}
-      <MobileNavbar />
+      <MobileNavbar scaleX={scaleX} />
     </div>
   )
 }
