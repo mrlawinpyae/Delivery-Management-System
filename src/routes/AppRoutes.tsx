@@ -8,11 +8,23 @@ import CheckoutPage from "@/apps/customer/pages/CheckoutPage"
 import DeliveryInfoPage from "@/apps/customer/pages/DeliveryInfoPage"
 import OrderHistoryPage from "@/apps/customer/pages/OrderHistoryPage"
 import OrderDetailsPage from "@/apps/customer/pages/OrderDetailsPage"
+import CustomerAuth from "@/apps/customer/pages/CustomerAuth"
+import ProtectedRoute from "@/apps/customer/components/ProtectedRoute"
+import GuestRoute from "@/apps/customer/components/GuestRoute"
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/customer" replace />, // Default အနေနဲ့ Customer App ဆီ ပို့ပေးမယ်
+    element: <Navigate to="/customer" replace />,
+  },
+  {
+    element: <GuestRoute />,
+    children: [
+      {
+        path: "/customer/login",
+        element: <CustomerAuth />,
+      },
+    ],
   },
   // --- APP A: Customer Routes ---
   {
@@ -27,21 +39,27 @@ export const router = createBrowserRouter([
         path: "restaurant/:id",
         element: <RestaurantMenu />,
       },
+
       {
-        path: "checkout",
-        element: <CheckoutPage />,
-      },
-      {
-        path: "delivery-info",
-        element: <DeliveryInfoPage />,
-      },
-      {
-        path: "order-history",
-        element: <OrderHistoryPage />,
-      },
-      {
-        path: "order/:id",
-        element: <OrderDetailsPage />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "checkout",
+            element: <CheckoutPage />,
+          },
+          {
+            path: "delivery-info",
+            element: <DeliveryInfoPage />,
+          },
+          {
+            path: "order-history",
+            element: <OrderHistoryPage />,
+          },
+          {
+            path: "order/:id",
+            element: <OrderDetailsPage />,
+          },
+        ],
       },
     ],
   },

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavItems } from "./CustomerNavbar" // အရင်က ခွဲထားတဲ့ items တွေကို ပြန်သုံးပါ
 import {
@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ChevronDown, Search } from "lucide-react"
+import { ChevronDown, Search, UserPlus } from "lucide-react"
 import { useSearch } from "@/context/SearchContext"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
   const location = useLocation()
@@ -39,6 +40,15 @@ export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
       toggleSearch()
     }
   }
+  const navigate = useNavigate()
+
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const logout = useAuthStore((state) => state.logout)
+
+  const handleLogout = () => {
+    logout()
+    navigate("/customer/login", { replace: true })
+  }
   return (
     <>
       {/* 1. Top Header: Logo + Profile */}
@@ -62,37 +72,45 @@ export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
             <Search size={16} />
           </button>
 
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>TR</AvatarFallback>
-              </Avatar>
-              <ChevronDown size={12} className="text-zinc-400" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="mt-2 w-40 rounded-2xl p-2"
-            >
-              <DropdownMenuLabel className="text-[10px] text-zinc-400 uppercase">
-                Account
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <Link to="/customer/order-history">
+          {/* Profile Dropdown / Sign Up Button */}
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>TR</AvatarFallback>
+                </Avatar>
+                <ChevronDown size={12} className="text-zinc-400" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="mt-2 w-40 rounded-2xl p-2"
+              >
+                <DropdownMenuLabel className="text-[10px] text-zinc-400 uppercase">
+                  Account
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
                 <DropdownMenuItem className="cursor-pointer py-2 text-xs">
-                  Order History
+                  Profile Settings
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem className="cursor-pointer py-2 text-xs">
-                Profile Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer py-2 text-xs text-red-600">
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-xl py-2 text-xs text-red-600 focus:bg-red-50 focus:text-red-700"
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/customer/login?signup=true"
+              className="rounded-full bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-zinc-800 active:scale-95"
+            >
+              <UserPlus size={16} />
+            </Link>
+          )}
         </div>
 
         {/* Search Modal */}

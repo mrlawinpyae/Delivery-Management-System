@@ -1,6 +1,13 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { ShoppingBag, User, Compass, ChevronDown, Search } from "lucide-react"
+import {
+  ShoppingBag,
+  User,
+  Compass,
+  ChevronDown,
+  Search,
+  Clock,
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -13,9 +20,11 @@ import {
 import { useCartStore } from "../../../store/useCartStore"
 import { useEffect, useRef } from "react"
 import { useSearch } from "@/context/SearchContext"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export const useNavItems = () => {
-  const cartItems = useCartStore((state) => state.items) // Cart ထဲက item အားလုံးရဲ့ quantity ကို ပေါင်းခြင်း
+  const cartItems = useCartStore((state) => state.items)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const totalItems = Object.values(cartItems).reduce(
     (sum, item) => sum + item.quantity,
@@ -30,7 +39,11 @@ export const useNavItems = () => {
       icon: ShoppingBag,
       badge: totalItems > 0 ? totalItems : undefined,
     },
-    { path: "/customer/login", label: "Account", icon: User },
+    {
+      path: isAuthenticated ? "/customer/order-history" : "/customer/login",
+      label: "Order",
+      icon: Clock,
+    },
   ]
 }
 
@@ -53,14 +66,22 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isSearchOpen, toggleSearch])
 
-  // Enter ခေါက်ရင် ပိတ်သွားအောင်
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       toggleSearch()
     }
   }
+  const navigate = useNavigate()
+
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const logout = useAuthStore((state) => state.logout)
+
+  const handleLogout = () => {
+    logout()
+    navigate("/customer/login", { replace: true })
+  }
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-100 bg-white/70 px-4 backdrop-blur-xl transition-all md:px-8 hidden md:block">
+    <header className="sticky top-0 z-40 hidden w-full border-b border-zinc-100 bg-white/70 px-4 backdrop-blur-xl transition-all md:block md:px-8">
       <div className="relative container mx-auto flex h-20 items-center justify-between">
         {/* Search Modal */}
         <AnimatePresence>
@@ -136,40 +157,54 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
             <Search size={16} />
           </button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-zinc-200/60 bg-white p-1.5 pr-3 shadow-sm transition-all hover:cursor-pointer hover:bg-zinc-50 focus:outline-none">
-              <Avatar className="h-7 w-7 border border-zinc-100">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>TR</AvatarFallback>
-              </Avatar>
+          {/* ─── CONDITIONAL RENDERING ─── */}
+          {isAuthenticated ? (
+            // Login ဝင်ပြီးသားဆိုရင် Avatar နဲ့ Dropdown ကို ပြမယ်
+            <DropdownMenu>
+              {/* Flexbox classes များကို Trigger တွင် ထည့်သွင်းထားပါသည် */}
+              {/* <DropdownMenuTrigger className="flex items-center gap-1.5 outline-none hover:cursor-pointer"> */}
+              <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>TR</AvatarFallback>
+                </Avatar>
+                {/* မြားလေးကို ပိုပြီးကြည့်ကောင်းအောင် size={14} လို့ အနည်းငယ် ကြီးပေးထားပါတယ် */}
+                <ChevronDown
+                  size={14}
+                  className="text-zinc-400 transition-transform duration-200"
+                />
+              </DropdownMenuTrigger>
 
-              <span className="text-xs font-medium text-zinc-700">Thiri</span>
-              <ChevronDown size={14} className="text-zinc-400" />
-            </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="mt-2 w-48 rounded-2xl p-1.5 shadow-lg"
+              >
+                <DropdownMenuLabel className="text-xs text-zinc-400">
+                  My Premium Account
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
 
-            <DropdownMenuContent
-              align="end"
-              className="mt-2 w-48 rounded-2xl p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.04)]"
-            >
-              <DropdownMenuLabel className="text-xs text-zinc-400">
-                 My Premium Account
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <Link to="/customer/order-history">
                 <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
-                  Order History
+                  Profile Settings
                 </DropdownMenuItem>
-              </Link>
+                <DropdownMenuSeparator />
 
-              <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
-                Profile Settings
-              </DropdownMenuItem>
-
-              <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs text-red-600">
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-xl py-2 text-xs text-red-600 focus:bg-red-50 focus:text-red-700"
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            // Login မဝင်ရသေးရင် Sign In Button ကို ပြမယ်
+            <Link to="/customer/login">
+              <button className="rounded-full bg-zinc-900 px-5 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 hover:shadow-md active:scale-95">
+                Sign In
+              </button>
+            </Link>
+          )}
         </div>
       </div>
 
