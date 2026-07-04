@@ -11,6 +11,7 @@ import OrderDetailsPage from "@/apps/customer/pages/OrderDetailsPage"
 import CustomerAuth from "@/apps/customer/pages/CustomerAuth"
 import ProtectedRoute from "@/apps/customer/components/ProtectedRoute"
 import GuestRoute from "@/apps/customer/components/GuestRoute"
+import ProfileSettingsPage from "@/apps/customer/pages/ProfileSettingsPage"
 
 export const router = createBrowserRouter([
   {
@@ -39,14 +40,13 @@ export const router = createBrowserRouter([
         path: "restaurant/:id",
         element: <RestaurantMenu />,
       },
-
+      {
+        path: "checkout",
+        element: <CheckoutPage />,
+      },
       {
         element: <ProtectedRoute />,
         children: [
-          {
-            path: "checkout",
-            element: <CheckoutPage />,
-          },
           {
             path: "delivery-info",
             element: <DeliveryInfoPage />,
@@ -58,6 +58,10 @@ export const router = createBrowserRouter([
           {
             path: "order/:id",
             element: <OrderDetailsPage />,
+          },
+          {
+            path: "profile",
+            element: <ProfileSettingsPage />,
           },
         ],
       },

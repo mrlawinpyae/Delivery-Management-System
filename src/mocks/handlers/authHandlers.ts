@@ -56,4 +56,27 @@ export const authHandlers = [
       error: null,
     })
   }),
+
+  // ─── GET USER PROFILE API MOCK ───
+  http.get("/api/auth/user/:userId", async ({ params }) => {
+    // URL ထဲက :userId ကို ယူပါမယ်
+    const { userId } = params
+
+    // တကယ့် API ခေါ်သလိုမျိုး အချိန်နည်းနည်း (စက္ကန့်ဝက်ခန့်) စောင့်ပါမယ်
+    await delay(500)
+
+    // မင်းပေးထားတဲ့ API Contract အတိုင်း အတိအကျ ပြန်ချပေးပါမယ်
+    return HttpResponse.json({
+      message: "User profile fetched successfully",
+      data: {
+        userId: userId,
+        name: "Thiri",
+        image: "https://github.com/shadcn.png",
+        phone: "+9509454844898",
+        email: "thiri@gmail.com",
+        role: "CUSTOMER",
+      },
+      error: null,
+    })
+  }),
 ]

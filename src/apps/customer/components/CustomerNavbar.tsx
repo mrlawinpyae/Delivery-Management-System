@@ -75,6 +75,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  const user = useAuthStore((state) => state.user)
 
   const handleLogout = () => {
     logout()
@@ -161,12 +162,12 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
           {isAuthenticated ? (
             // Login ဝင်ပြီးသားဆိုရင် Avatar နဲ့ Dropdown ကို ပြမယ်
             <DropdownMenu>
-              {/* Flexbox classes များကို Trigger တွင် ထည့်သွင်းထားပါသည် */}
-              {/* <DropdownMenuTrigger className="flex items-center gap-1.5 outline-none hover:cursor-pointer"> */}
+         
+         
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>TR</AvatarFallback>
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={user?.image || "https://github.com/shadcn.png"} />
+                  <AvatarFallback>{user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}</AvatarFallback>
                 </Avatar>
                 {/* မြားလေးကို ပိုပြီးကြည့်ကောင်းအောင် size={14} လို့ အနည်းငယ် ကြီးပေးထားပါတယ် */}
                 <ChevronDown
@@ -183,10 +184,11 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
                   My Premium Account
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-
-                <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
-                  Profile Settings
-                </DropdownMenuItem>
+                <Link to="/customer/profile">
+                  <DropdownMenuItem className="cursor-pointer rounded-xl py-2 text-xs">
+                    Profile Settings
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem

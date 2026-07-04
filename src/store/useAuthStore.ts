@@ -6,6 +6,8 @@ interface User {
   userId: string
   name: string
   role: string
+  image?: string
+  phone?: string
 }
 
 interface AuthState {
