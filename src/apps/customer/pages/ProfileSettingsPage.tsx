@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { User, Mail, Save, ArrowLeft, Loader2, Camera } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
+import type { FieldErrors } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast, Toaster } from "sonner"
@@ -35,8 +36,6 @@ export default function ProfileSettingsPage() {
   const user = useAuthStore((state) => state.user)
   const login = useAuthStore((state) => state.login)
 
-
-
   // ─── LOADING STATE FOR FETCHING DATA ───
   const [isLoadingData, setIsLoadingData] = useState(true)
 
@@ -51,7 +50,7 @@ export default function ProfileSettingsPage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -82,7 +81,9 @@ export default function ProfileSettingsPage() {
         setPhone(userData.phone || "")
 
         // Local user image has precedence, then API image, then default fallback
-        setAvatarPreview(user?.image || userData.image || "https://github.com/shadcn.png")
+        setAvatarPreview(
+          user?.image || userData.image || "https://github.com/shadcn.png"
+        )
       } catch (error) {
         console.error("Error fetching user data:", error)
         toast.error("Failed to load profile data")
@@ -122,32 +123,58 @@ export default function ProfileSettingsPage() {
       return
     }
 
-    try {
-      // Profile Update လုပ်မည့် API နေရာ (လောလောဆယ် Delay ထည့်ထားပါတယ်)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (!user?.userId) {
+      toast.error("User ID not found.")
+      return
+    }
 
-      if (user) {
-        login(
-          { ...user, ...data, phone, image: avatarPreview },
-          useAuthStore.getState().token!
-        )
-      }
+    try {
+      // Axios PUT request to update profile
+      const response = await axios.put(`/api/auth/user/${user.userId}`, {
+        name: data.name,
+        image: avatarPreview,
+        phone: phone,
+      })
+
+      const updatedUser = response.data.data
+
+      login(
+        {
+          ...user,
+          name: updatedUser.name,
+          image: updatedUser.image,
+          phone: updatedUser.phone,
+        },
+        useAuthStore.getState().token!
+      )
+
+      // Reset RHF internal state with the new values so isDirty resets correctly
+      reset({
+        name: updatedUser.name,
+        email: data.email,
+      })
 
       toast.success("Profile updated successfully!")
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update profile")
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { error?: string } }
+        message?: string
+      }
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to update profile"
+      toast.error(errorMessage)
     }
   }
 
   // Show Zod validation errors as toasts
-  const onFormError = (formErrors: Record<string, any>) => {
+  const onFormError = (formErrors: FieldErrors<ProfileFormValues>) => {
     const firstError = Object.values(formErrors)[0]
     if (firstError?.message) {
-      toast.error(firstError.message as string)
+      toast.error(firstError.message)
     }
   }
-
-
 
   return (
     <div className="min-h-screen bg-[#F9F9FB] p-4 pt-10 md:p-10">
@@ -190,9 +217,12 @@ export default function ProfileSettingsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-6">
+            <form
+              onSubmit={handleSubmit(onSubmit, onFormError)}
+              className="space-y-6"
+            >
               {/* PROFILE IMAGE UPDATE & PREVIEW */}
-              <div className="flex flex-col items-center gap-4 border-b border-zinc-100 pb-6 mb-6">
+              <div className="mb-6 flex flex-col items-center gap-4 border-b border-zinc-100 pb-6">
                 <div className="group relative h-24 w-24 overflow-hidden rounded-full border-2 border-zinc-200 shadow-sm transition-all hover:border-zinc-400 hover:shadow-md">
                   {avatarPreview ? (
                     <img
@@ -207,7 +237,9 @@ export default function ProfileSettingsPage() {
                   )}
                   <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                     <Camera size={18} className="text-white" />
-                    <span className="mt-1 text-[10px] font-medium text-white">Change</span>
+                    <span className="mt-1 text-[10px] font-medium text-white">
+                      Change
+                    </span>
                     <input
                       type="file"
                       accept="image/*"
@@ -217,8 +249,12 @@ export default function ProfileSettingsPage() {
                   </label>
                 </div>
                 <div className="text-center">
-                  <h3 className="text-sm font-semibold text-zinc-900">{user?.name || "User Name"}</h3>
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider">{user?.role || "CUSTOMER"}</p>
+                  <h3 className="text-sm font-semibold text-zinc-900">
+                    {user?.name || "User Name"}
+                  </h3>
+                  <p className="text-xs tracking-wider text-zinc-500 uppercase">
+                    {user?.role || "CUSTOMER"}
+                  </p>
                 </div>
               </div>
 
@@ -245,7 +281,8 @@ export default function ProfileSettingsPage() {
                   <Mail className="absolute top-3.5 left-4 h-5 w-5 text-zinc-400" />
                   <input
                     {...register("email")}
-                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 py-3.5 pr-4 pl-12 text-sm transition-all outline-none focus:border-zinc-400 focus:bg-white focus:ring-4 focus:ring-zinc-100"
+                    readOnly
+                    className="w-full cursor-not-allowed rounded-2xl border border-zinc-200 bg-zinc-100 py-3.5 pr-4 pl-12 text-sm text-zinc-500 outline-none"
                   />
                 </div>
               </div>
@@ -263,7 +300,10 @@ export default function ProfileSettingsPage() {
                   className="flex h-[50px] w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 px-3 text-sm transition-all focus-within:border-zinc-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-zinc-100"
                   inputClassName="!border-none !bg-transparent !outline-none !ring-0 !px-2 !text-sm !text-zinc-900 h-full"
                   countrySelectorStyleProps={{
-                    buttonStyle: { border: "none", backgroundColor: "transparent" },
+                    buttonStyle: {
+                      border: "none",
+                      backgroundColor: "transparent",
+                    },
                   }}
                 />
               </div>
@@ -271,7 +311,10 @@ export default function ProfileSettingsPage() {
               {/* SUBMIT BUTTON */}
               <div className="pt-4">
                 <button
-                  disabled={(!isDirty && !isImageChanged && !isPhoneChanged) || isSubmitting}
+                  disabled={
+                    (!isDirty && !isImageChanged && !isPhoneChanged) ||
+                    isSubmitting
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-900 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-xl active:scale-[0.98] disabled:scale-100 disabled:opacity-50"
                 >
                   {isSubmitting ? (

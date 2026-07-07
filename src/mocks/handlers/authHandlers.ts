@@ -30,7 +30,7 @@ export const authHandlers = [
   http.post("/api/auth/sign-up", async ({ request }) => {
     // Request body ကို ယူပါမယ်
     const body = await request.json()
-    const { name, phone, email, password } = body as Record<string, string>
+    const { name, email, password } = body as Record<string, string>
 
     await delay(1000)
 
@@ -74,6 +74,27 @@ export const authHandlers = [
         image: "https://github.com/shadcn.png",
         phone: "+9509454844898",
         email: "thiri@gmail.com",
+        role: "CUSTOMER",
+      },
+      error: null,
+    })
+  }),
+
+  // ─── UPDATE USER PROFILE API MOCK ───
+  http.put("/api/auth/user/:userId", async ({ request, params }) => {
+    const { userId } = params
+    const body = await request.json()
+    const { name, image, phone } = body as Record<string, string>
+
+    await delay(1000)
+
+    return HttpResponse.json({
+      message: "User profile updated successfully",
+      data: {
+        userId: userId,
+        name: name,
+        image: image || "https://github.com/shadcn.png",
+        phone: phone,
         role: "CUSTOMER",
       },
       error: null,
