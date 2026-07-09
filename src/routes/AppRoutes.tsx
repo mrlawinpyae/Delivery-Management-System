@@ -12,6 +12,9 @@ import CustomerAuth from "@/apps/customer/pages/CustomerAuth"
 import ProtectedRoute from "@/apps/customer/components/ProtectedRoute"
 import GuestRoute from "@/apps/customer/components/GuestRoute"
 import ProfileSettingsPage from "@/apps/customer/pages/ProfileSettingsPage"
+import RiderTasks from "@/apps/rider/pages/RiderTasks"
+import RiderTaskDetails from "@/apps/rider/pages/RiderTaskDetails"
+
 
 export const router = createBrowserRouter([
   {
@@ -94,16 +97,11 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "",
-        element: (
-          <div className="rounded-lg border border-stone-700 bg-stone-800 p-4">
-            <h3 className="font-semibold text-yellow-500">
-              Active Delivery Job
-            </h3>
-            <p className="text-sm text-stone-400">
-              Rider Map and tasks will be here.
-            </p>
-          </div>
-        ),
+        element: <RiderTasks />,
+      },
+      {
+        path: ":id",
+        element: <RiderTaskDetails />,
       },
     ],
   },

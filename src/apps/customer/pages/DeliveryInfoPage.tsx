@@ -39,6 +39,19 @@ let DefaultIcon = L.icon({
 })
 L.Marker.prototype.options.icon = DefaultIcon
 
+// Pulsing cyan dot — marks the customer's pinned delivery location
+const LocationDotIcon = L.divIcon({
+  className: "",
+  html: `<div style="position:relative;width:24px;height:24px;">
+    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(6,182,212,0.25);animation:ping 1.4s cubic-bezier(0,0,0.2,1) infinite;"></div>
+    <div style="position:absolute;inset:4px;border-radius:50%;background:#06b6d4;border:2.5px solid white;box-shadow:0 0 0 2px rgba(6,182,212,0.5);"></div>
+    <style>@keyframes ping{75%,100%{transform:scale(2);opacity:0;}}</style>
+  </div>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -14],
+})
+
 const deliverySchema = z.object({
   phone: z.string().refine(
     (val) => {
@@ -92,7 +105,7 @@ export default function DeliveryInfoPage() {
   // Marker is now fixed in place — it only moves when the user taps
   // "Use Current Location", never by clicking/dragging on the map.
   function LocationMarker() {
-    return <Marker position={position} />
+    return <Marker position={position} icon={LocationDotIcon} />
   }
 
   // Capture the map instance so we can call flyTo() on it programmatically
@@ -279,19 +292,6 @@ export default function DeliveryInfoPage() {
             <label className="flex items-center gap-2 text-sm font-medium text-zinc-900">
               <MapPin size={16} /> Delivery Location
             </label>
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
-              disabled={locating}
-              className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {locating ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <LocateFixed size={14} />
-              )}
-              {locating ? "Locating..." : "Use Current Location"}
-            </button>
           </div>
 
           {/* Map Container — wrapped with isolate so Leaflet's internal
@@ -313,6 +313,21 @@ export default function DeliveryInfoPage() {
               <LocationMarker />
               <MapRefSetter />
             </MapContainer>
+
+            {/* Use Current Location — overlaid inside the map, bottom-right */}
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              disabled={locating}
+              className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/90 px-3 py-2 text-xs font-bold text-zinc-700 shadow-lg backdrop-blur-sm transition hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {locating ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <LocateFixed size={14} />
+              )}
+              {locating ? "Locating..." : "Use Current Location"}
+            </button>
           </div>
           {/* Cap Leaflet's internal stacking context so its panes/controls
               (which default to z-index up to 1000) never render above
@@ -328,8 +343,7 @@ export default function DeliveryInfoPage() {
             }
           `}</style>
           <p className="text-xs text-zinc-400">
-            Tap "Use Current Location" above to set your delivery point
-            automatically.
+            Your location is pinned on the map. Tap the button inside the map to re-center.
           </p>
           {locationError && (
             <p className="text-sm font-medium text-red-500">{locationError}</p>
