@@ -7,7 +7,7 @@ import type { FieldErrors } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast, Toaster } from "sonner"
-import axios from "axios" // Axios ကို import လုပ်ပါ
+import axios from "axios"
 import { useAuthStore } from "@/store/useAuthStore"
 import { isValidPhoneNumber } from "libphonenumber-js"
 import {
@@ -62,16 +62,13 @@ export default function ProfileSettingsPage() {
   // ─── FETCH USER DATA (AXIOS) ───
   useEffect(() => {
     const fetchUserData = async () => {
-      // userId မရှိရင် API မခေါ်ပါဘူး
       if (!user?.userId) return
 
       try {
-        // Backend (MSW) ဆီကနေ User Info ကို Axios နဲ့ လှမ်းယူပါမယ်
         const response = await axios.get(`/api/auth/user/${user.userId}`)
 
         const userData = response.data.data
 
-        // ရလာတဲ့ Data ကို Form ထဲ ဖြည့်ပေးပါမယ်
         reset({
           name: userData.name || "",
           email: userData.email || "",
@@ -88,7 +85,7 @@ export default function ProfileSettingsPage() {
         console.error("Error fetching user data:", error)
         toast.error("Failed to load profile data")
       } finally {
-        setIsLoadingData(false) // Fetch လုပ်လို့ ပြီးသွားပါပြီ
+        setIsLoadingData(false)
       }
     }
 
@@ -211,8 +208,7 @@ export default function ProfileSettingsPage() {
             </p>
           </div>
 
-          {/* Data ယူနေတုန်းမှာ Loading Spinner ပြပါမယ် */}
-          {isLoadingData ? (
+                    {isLoadingData ? (
             <div className="flex h-40 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
             </div>

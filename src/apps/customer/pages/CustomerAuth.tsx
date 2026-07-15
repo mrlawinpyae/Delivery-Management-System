@@ -22,7 +22,6 @@ import { useAuthStore } from "@/store/useAuthStore"
 // ─── VALIDATION SCHEMAS ───
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email format"),
-  // Login မှာ Password ရိုက်ထည့်ဖို့လောက်ပဲ စစ်ပါမယ်
   password: z.string().min(1, "Password is required"),
 })
 
@@ -81,15 +80,13 @@ export default function CustomerAuth() {
       const response = await axios.post(endpoint, payload)
 
       if (isLogin) {
-        // Login အောင်မြင်ရင် Store (and LocalStorage) ထဲကို သိမ်းမယ်
         const { token, ...userData } = response.data.data
         login(userData, token)
       }
 
       toast.success(response.data.message)
-      navigate("/customer") // သို့မဟုတ် Protected ဖြစ်တဲ့ page တစ်ခုခု
+      navigate("/customer")
     } catch (err: any) {
-      // Axios Error Handling: Backend က Error msg ကို ဖမ်းမယ်
       const errorMessage =
         err.response?.data?.error || err.message || "Authentication failed"
 
@@ -99,11 +96,10 @@ export default function CustomerAuth() {
     }
   }
 
-  // Toggle လုပ်တဲ့အခါ Form ကြီးတစ်ခုလုံးကို Reset လုပ်မယ်
   const toggleAuthMode = () => {
     setIsLogin(!isLogin)
     setApiError(null)
-    reset() // React Hook Form ရဲ့ errors နဲ့ values တွေကို ရှင်းလင်းမယ်
+    reset()
   }
 
   // Helper component for error messages

@@ -29,6 +29,7 @@ import L from "leaflet"
 import icon from "leaflet/dist/images/marker-icon.png"
 import iconShadow from "leaflet/dist/images/marker-shadow.png"
 import { useCartStore } from "@/store/useCartStore"
+import { useAuthStore } from "@/store/useAuthStore"
 import { useLocation } from "react-router-dom"
 
 let DefaultIcon = L.icon({
@@ -99,6 +100,7 @@ export default function DeliveryInfoPage() {
   const [locationError, setLocationError] = useState<string | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const { items, clearCart } = useCartStore()
+  const user = useAuthStore((state) => state.user)
 
   const [position, setPosition] = useState<[number, number]>(MAGWAY_CENTER)
 
@@ -166,7 +168,6 @@ export default function DeliveryInfoPage() {
     )
   }
 
-  // Position ပြောင်းတိုင်း Address အလိုအလျောက် ရယူရန်
   useEffect(() => {
     const fetchAddress = async () => {
       const [lat, lng] = position
@@ -186,7 +187,6 @@ export default function DeliveryInfoPage() {
   const location = useLocation()
   const { totalAmount } = location.state || { totalAmount: 0 }
 
-  // DeliveryInfoPage ထဲတွင်
   if (!location.state) {
     navigate("/customer/checkout")
   }
@@ -204,50 +204,35 @@ export default function DeliveryInfoPage() {
       return
     }
 
-    const uniqueRestaurantIds = Array.from(
-      new Set(
-        Object.values(items)
-          .map((i) => i.restaurantId)
-          .filter((id) => id !== undefined)
-      )
-    )
-
+    // Build the request body that matches POST /api/order/save-order
     const orderData = {
-      customerId: "USER_ID_FROM_AUTH",
-      restaurantsId: uniqueRestaurantIds,
-      status: "PREPARING",
+      customerId: user?.userId ?? "GUEST",
       totalAmount,
-      deliveryLocation: {
-        address: address,
-        latitude: position[0],
-        longitude: position[1],
-      },
       shipping_phone: phone,
+      deliveryAddress: address,
+      latitude: position[0],
+      longitude: position[1],
       items: Object.values(items).map((i) => ({
-        itemId: i.itemId,
+        restaurantId: i.restaurantId,
         name: i.name,
+        image: i.image,
         quantity: i.quantity,
         priceAtPurchase: i.price,
       })),
-      createdAt: new Date().toISOString(),
     }
 
     try {
-      // Axios သုံးထားခြင်း
       const response = await axios.post("/api/order/save-order", orderData)
 
-      // Axios က response.data မှာ JSON ကို အသင့်ပေးထားပြီးသားပါ
-      const data = response.data
-
-      toast.success("Order confirmed successfully!")
-      console.log("Order Success:", data)
+      // Success: { message, data: { orderId, status }, error: null }
+      const { message, data } = response.data
+      toast.success(message || "Order placed successfully!")
+      console.log("Order Success — orderId:", data?.orderId, "status:", data?.status)
       clearCart()
       setTimeout(() => {
         navigate("/customer/order-history", { replace: true })
       }, 1500)
     } catch (error: any) {
-      // Axios က Error တွေကို catch ထဲ တန်းရောက်ပါတယ်
-      // Backend က ပြန်လာတဲ့ message ကို error.response.data ကနေ ယူနိုင်ပါတယ်
       const errorMessage =
         error.response?.data?.error ||
         "Failed to place order. Please try again."
@@ -255,7 +240,6 @@ export default function DeliveryInfoPage() {
     }
   }
 
-  // ၁။ Page စရောက်တာနဲ့ Current Location ကို Auto တောင်းရန်
   useEffect(() => {
     handleUseCurrentLocation()
   }, [])

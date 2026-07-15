@@ -14,7 +14,6 @@ export const authHandlers = [
           userId: "usr_cust_001",
           name: "Test User",
           role: "CUSTOMER",
-          // ဒီ Token ကို Frontend က LocalStorage မှာ သိမ်းပါမယ်
           token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy.token",
         },
       })
@@ -28,7 +27,6 @@ export const authHandlers = [
 
   // ─── 2. USER SIGN UP MOCK ───
   http.post("/api/auth/sign-up", async ({ request }) => {
-    // Request body ကို ယူပါမယ်
     const body = await request.json()
     const { name, email, password } = body as Record<string, string>
 
@@ -45,7 +43,6 @@ export const authHandlers = [
       )
     }
 
-    // Success Response ကို Contract အတိုင်း ပြန်ပေးပါမယ်
     return HttpResponse.json({
       message: "Registration successful",
       data: {
@@ -59,13 +56,26 @@ export const authHandlers = [
 
   // ─── GET USER PROFILE API MOCK ───
   http.get("/api/auth/user/:userId", async ({ params }) => {
-    // URL ထဲက :userId ကို ယူပါမယ်
     const { userId } = params
 
-    // တကယ့် API ခေါ်သလိုမျိုး အချိန်နည်းနည်း (စက္ကန့်ဝက်ခန့်) စောင့်ပါမယ်
     await delay(500)
 
-    // မင်းပေးထားတဲ့ API Contract အတိုင်း အတိအကျ ပြန်ချပေးပါမယ်
+    // Return rider-specific data for rider userIds
+    if (typeof userId === "string" && userId.startsWith("usr_rider")) {
+      return HttpResponse.json({
+        message: "User profile fetched successfully",
+        data: {
+          userId: userId,
+          name: "Aung Ko Ko",
+          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
+          phone: "09785412596",
+          email: "aungkoko@delivx.com",
+          role: "RIDER",
+        },
+        error: null,
+      })
+    }
+
     return HttpResponse.json({
       message: "User profile fetched successfully",
       data: {

@@ -52,7 +52,7 @@ export default function OrderDetailsPage() {
         {/* Header Section */}
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Order Details</h1>
-          <p className="text-zinc-500">#{(order as any).orderId}</p>
+          <p className="text-zinc-500">#{order.orderId}</p>
         </div>
 
         {/* Order Items */}
@@ -61,15 +61,23 @@ export default function OrderDetailsPage() {
             Items
           </h2>
           <div className="space-y-4">
-            {order.items.map((item: any) => (
+            {order.items.map((item: any, index: number) => (
               <div
-                key={item.itemId}
+                key={`${item.name}-${index}`}
                 className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200">
-                    <Package className="h-8 w-8 text-zinc-500" />
-                  </div>
+                  {item.image && item.image !== "fdf" ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-16 w-16 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200">
+                      <Package className="h-8 w-8 text-zinc-500" />
+                    </div>
+                  )}
 
                   <div className="flex flex-1 flex-col items-center sm:items-start">
                     <h3 className="text-center text-base font-semibold text-zinc-900 sm:text-left">

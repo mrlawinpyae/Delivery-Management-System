@@ -3,7 +3,6 @@ import { Link } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { MapPin } from "lucide-react"
 
-// Custom Hook ကနေ API data လှမ်းယူခြင်း
 import { useRestaurants } from "../hooks/useRestaurants"
 
 // Shadcn UI Components
@@ -11,10 +10,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useSearch } from "@/context/SearchContext"
 
 export default function BrowseRestaurants() {
-  // Hook ကနေ တိုက်ရိုက်ရလာတဲ့ array ကို 'restaurants' လို့ပဲ နာမည်ပေးလိုက်ပါ
   const { data: restaurants, isLoading, error } = useRestaurants()
   const { searchTerm } = useSearch()
-  // restaurants က undefined ဖြစ်ရင် [] (empty array) ကို သုံးပါ
   const restaurantList = restaurants || []
   // Logic: Filter based on name
   const filteredRestaurants = restaurantList.filter((shop: any) =>

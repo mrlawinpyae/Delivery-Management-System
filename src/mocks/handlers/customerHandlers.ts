@@ -1,7 +1,6 @@
 // src/mocks/handlers.ts
 import { http, HttpResponse } from "msw"
 
-// ─── ၁။ Mock Data: Restaurants ───
 const explicitRestaurants = [
   {
     restaurantId: "merch_kky_09",
@@ -47,7 +46,6 @@ const generatedRestaurants = Array.from({ length: 27 }).map((_, index) => {
 
 const mockRestaurants = [...explicitRestaurants, ...generatedRestaurants]
 
-// ─── ၂။ Mock Data: Menus ───
 
 const mockMenus: Record<string, any[]> = {}
 
@@ -55,18 +53,18 @@ mockRestaurants.forEach((shop) => {
   mockMenus[shop.restaurantId] = [
     {
       itemId: `menu_${shop.restaurantId}_01`,
-      name: `Signature Dish of ${shop.name}`, // ဆိုင်နာမည်အလိုက် ပြောင်းသွားပါမယ်
+      name: `Signature Dish of ${shop.name}`,
       description: `Chef's special recommendation at ${shop.name}.`,
-      price: Math.floor(Math.random() * 5 + 3) * 1000, // 3000 - 7000 ကျပ်ကြား
+      price: Math.floor(Math.random() * 5 + 3) * 1000,
       isAvailable: true,
       image:
         "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80",
     },
     {
       itemId: `menu_${shop.restaurantId}_02`,
-      name: `${shop.name} Combo Set`, // ဆိုင်နာမည်နဲ့ Combo Set
+      name: `${shop.name} Combo Set`,
       description: "A fulfilling meal with rice and premium side dishes.",
-      price: Math.floor(Math.random() * 3 + 2) * 1000, // 2000 - 4000 ကျပ်ကြား
+      price: Math.floor(Math.random() * 3 + 2) * 1000,
       isAvailable: true,
       image:
         "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=400&q=80",
@@ -82,7 +80,6 @@ mockRestaurants.forEach((shop) => {
     },
   ]
 })
-// Order များကို သိမ်းဆည်းရန် In-memory array
 export const mockOrders: any[] = [
   {
     orderId: "ord_1003",
@@ -99,7 +96,6 @@ export const mockOrders: any[] = [
   },
 ]
 
-// ─── ၃။ API Handlers ───
 export const handlers = [
   // 1. Get All Restaurants
   http.get("/api/restaurants", () => {
@@ -169,35 +165,33 @@ export const handlers = [
   http.post("/api/order/save-order", async ({ request }) => {
     const body = (await request.json()) as any
 
-    // 1. လက်ရှိ LocalStorage ထဲက အော်ဒါတွေကို အရင်ယူမယ်
+    // Retrieve existing orders from localStorage
     const existingOrders = JSON.parse(
       localStorage.getItem("mock_orders") || "[]"
     )
 
-    // 2. အော်ဒါအသစ် ဖန်တီးမယ်
+    // Generate a new order with a stable orderId key
+    const orderId = "ord_" + Math.random().toString(36).substr(2, 5)
     const newOrder = {
-      _id: "ord_" + Math.random().toString(36).substr(2, 5),
-      status: "PREPARING", // Backend က ပေးတဲ့ initial status
+      orderId,
+      status: "PENDING",
       ...body,
     }
 
-    // 3. Array အသစ်ထဲကို Push လုပ်မယ်
     existingOrders.push(newOrder)
-
-    // 4. LocalStorage ထဲကို ပြန်သိမ်းမယ်
     localStorage.setItem("mock_orders", JSON.stringify(existingOrders))
 
+    // Return the exact shape defined in API Contract #8
     return HttpResponse.json(
       {
         message: "Order placed successfully",
-        data: { orderId: newOrder.orderId, status: "PREPARING" },
+        data: { orderId, status: "PENDING" },
         error: null,
       },
       { status: 201 }
     )
   }),
 
-  // 5. Order History ကို ပြန်ဆွဲထုတ်ဖို့ Handler အသစ်တစ်ခု ထပ်ထည့်ပေးရမယ်
   http.get("/api/orders/getUserOrders/:userId", () => {
     const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
     return HttpResponse.json({
@@ -207,17 +201,14 @@ export const handlers = [
     })
   }),
 
-  // 7. Get Order Details
+  // 7. Get Order Details — API Contract #7
   http.get("/api/orders/getOrderDetails/:orderId", ({ params }) => {
     const { orderId } = params as { orderId: string }
 
-    // LocalStorage ထဲက အော်ဒါများအားလုံးကို ထုတ်ယူ
     const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
 
-    // orderId နဲ့ ကိုက်ညီတဲ့ အော်ဒါကို ရှာဖွေခြင်း
-    // (မှတ်ချက်: မင်းရဲ့ save-order မှာ _id နဲ့ သိမ်းထားရင် ဒီနေရာမှာ o._id နဲ့ စစ်ပါ)
     const order = savedOrders.find(
-      (o: any) => o._id === orderId || o.orderId === orderId
+      (o: any) => o.orderId === orderId
     )
 
     if (!order) {
@@ -231,17 +222,21 @@ export const handlers = [
       )
     }
 
-    // API Contract အတိုင်း ပြန်ပေးခြင်း
+    // Return the exact shape defined in API Contract #7
     return HttpResponse.json({
       message: "Order details fetched",
       data: {
-        orderId: order.orderId || order._id,
-        restaurantId: order.restaurantId || "merch_kky_09", // Mock data အတွက် default
+        orderId: order.orderId,
         status: order.status,
         totalAmount: order.totalAmount,
-        deliveryAddress:
-          order.deliveryAddress || order.deliveryLocation?.address,
-        items: order.items,
+        deliveryAddress: order.deliveryAddress,
+        items: (order.items || []).map((item: any) => ({
+          restaurantId: item.restaurantId,
+          name: item.name,
+          image: item.image,
+          quantity: item.quantity,
+          priceAtPurchase: item.priceAtPurchase,
+        })),
       },
       error: null,
     })

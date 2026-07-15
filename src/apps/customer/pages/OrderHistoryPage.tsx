@@ -71,7 +71,7 @@ export default function OrderHistoryPage() {
         >
           {orders.map((order) => (
             <motion.div
-              key={order._id}
+              key={order.orderId}
               variants={item}
               className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-zinc-300"
             >
@@ -79,14 +79,16 @@ export default function OrderHistoryPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-zinc-900">
-                      Order #{(order as any).orderId?.slice(-5)}
+                      Order #{order.orderId?.slice(-5)}
                     </h3>
                     <p className="mt-1 text-xs text-zinc-500">
-                      {new Date(order.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </p>
                   </div>
                   <div
@@ -102,7 +104,7 @@ export default function OrderHistoryPage() {
                 </div>
 
                 <p className="line-clamp-1 text-sm text-zinc-600">
-                  {order.deliveryLocation.address}
+                  {order.deliveryAddress}
                 </p>
 
                 <div className="flex items-center justify-between border-t border-zinc-100 pt-3">
@@ -110,7 +112,7 @@ export default function OrderHistoryPage() {
                     {order.totalAmount.toLocaleString()} MMK
                   </span>
                   <Link
-                    to={`/customer/order/${order._id}`}
+                    to={`/customer/order/${order.orderId}`}
                     className="flex items-center gap-1 text-xs font-bold text-zinc-500 transition-colors hover:text-zinc-900"
                   >
                     View Details <ArrowRight className="h-3 w-3" />

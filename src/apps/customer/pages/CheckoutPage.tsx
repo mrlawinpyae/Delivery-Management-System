@@ -151,7 +151,6 @@ export default function CheckoutPage() {
         <Button
           className="mt-6 h-12 w-full rounded-2xl bg-zinc-900 text-base font-semibold text-white hover:cursor-pointer hover:bg-zinc-800"
           onClick={() => {
-            // ဒီနေရာမှာ Next Page (ဥပမာ: /checkout/delivery-info) ကို သွားအောင် လုပ်ပါ
             navigate("/customer/delivery-info", { state: { totalAmount } })
           }}
         >

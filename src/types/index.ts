@@ -40,7 +40,7 @@ export interface Restaurant {
 }
 
 export interface OrderItem {
-  itemId: string
+  restaurantId: string
   name: string
   image: string
   quantity: number
@@ -48,19 +48,13 @@ export interface OrderItem {
 }
 
 export interface Order {
-  _id: string
-  customerId: string
-  restaurantsId: Array<string>
-  riderId: string | null
+  orderId: string
+  customerId?: string
   status: OrderStatus
   totalAmount: number
   deliveryAddress: string
-  deliveryLocation: {
-    address: string
-    latitude: number
-    longitude: number
-  }
-  shipping_phone: string
+  latitude?: number
+  longitude?: number
   items: OrderItem[]
-  createdAt: string
+  createdAt?: string
 }

@@ -14,6 +14,8 @@ import GuestRoute from "@/apps/customer/components/GuestRoute"
 import ProfileSettingsPage from "@/apps/customer/pages/ProfileSettingsPage"
 import RiderTasks from "@/apps/rider/pages/RiderTasks"
 import RiderTaskDetails from "@/apps/rider/pages/RiderTaskDetails"
+import RiderProfile from "@/apps/rider/pages/RiderProfile"
+
 
 
 export const router = createBrowserRouter([
@@ -98,6 +100,10 @@ export const router = createBrowserRouter([
       {
         path: "",
         element: <RiderTasks />,
+      },
+      {
+        path: "profile",
+        element: <RiderProfile />,
       },
       {
         path: ":id",

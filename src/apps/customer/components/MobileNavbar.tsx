@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { useNavItems } from "./CustomerNavbar" // အရင်က ခွဲထားတဲ့ items တွေကို ပြန်သုံးပါ
+import { useNavItems } from "./CustomerNavbar"
 import {
   DropdownMenu,
   DropdownMenuContent,

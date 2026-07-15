@@ -10,7 +10,6 @@ export default function CustomerLayout() {
 
   // ─── 📜 SCROLL PROGRESS ENGINE ───
   const { scrollYProgress } = useScroll()
-  // useSpring သုံးခြင်းဖြင့် progress bar ပြေးတာ ပိုမိုညင်သာပြီး အိအိလေး သွားစေပါမည်
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,

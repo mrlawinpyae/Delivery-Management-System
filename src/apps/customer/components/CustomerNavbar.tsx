@@ -93,7 +93,6 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
               exit={{ opacity: 0, y: -20 }}
               className="fixed top-24 right-0 left-0 z-50 flex justify-center px-4"
             >
-              {/* ref ထည့်ပေးလိုက်ပါ */}
               <div
                 ref={searchRef}
                 className="w-full max-w-lg rounded-2xl border border-zinc-100 bg-white p-2 shadow-2xl"
@@ -104,7 +103,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
                   placeholder="Search restaurants..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={handleKeyDown} // Enter ခေါက်ရင် trigger လုပ်မယ်
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </motion.div>
@@ -160,16 +159,16 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
 
           {/* ─── CONDITIONAL RENDERING ─── */}
           {isAuthenticated ? (
-            // Login ဝင်ပြီးသားဆိုရင် Avatar နဲ့ Dropdown ကို ပြမယ်
             <DropdownMenu>
-         
-         
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={user?.image || "https://github.com/shadcn.png"} />
-                  <AvatarFallback>{user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}</AvatarFallback>
+                  <AvatarImage
+                    src={user?.image || "https://github.com/shadcn.png"}
+                  />
+                  <AvatarFallback>
+                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}
+                  </AvatarFallback>
                 </Avatar>
-                {/* မြားလေးကို ပိုပြီးကြည့်ကောင်းအောင် size={14} လို့ အနည်းငယ် ကြီးပေးထားပါတယ် */}
                 <ChevronDown
                   size={14}
                   className="text-zinc-400 transition-transform duration-200"
@@ -200,7 +199,6 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            // Login မဝင်ရသေးရင် Sign In Button ကို ပြမယ်
             <Link to="/customer/login">
               <button className="rounded-full bg-zinc-900 px-5 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 hover:shadow-md active:scale-95">
                 Sign In
