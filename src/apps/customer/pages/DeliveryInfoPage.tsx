@@ -1,4 +1,4 @@
-import axios from "axios"
+import axios from "@/lib/axios"
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
@@ -204,9 +204,12 @@ export default function DeliveryInfoPage() {
       return
     }
 
+    const customerId = user
+      ? user.userId || (user as any).id || (user as any)._id
+      : "GUEST"
     // Build the request body that matches POST /api/order/save-order
     const orderData = {
-      customerId: user?.userId ?? "GUEST",
+      customerId,
       totalAmount,
       shipping_phone: phone,
       deliveryAddress: address,
@@ -222,12 +225,17 @@ export default function DeliveryInfoPage() {
     }
 
     try {
-      const response = await axios.post("/api/order/save-order", orderData)
+      const response = await axios.post("/orders/save-order", orderData)
 
       // Success: { message, data: { orderId, status }, error: null }
       const { message, data } = response.data
       toast.success(message || "Order placed successfully!")
-      console.log("Order Success — orderId:", data?.orderId, "status:", data?.status)
+      console.log(
+        "Order Success — orderId:",
+        data?.orderId,
+        "status:",
+        data?.status
+      )
       clearCart()
       setTimeout(() => {
         navigate("/customer/order-history", { replace: true })
@@ -303,7 +311,7 @@ export default function DeliveryInfoPage() {
               type="button"
               onClick={handleUseCurrentLocation}
               disabled={locating}
-              className="absolute bottom-3 right-3 z-[1000] flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/90 px-3 py-2 text-xs font-bold text-zinc-700 shadow-lg backdrop-blur-sm transition hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="absolute right-3 bottom-3 z-[1000] flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/90 px-3 py-2 text-xs font-bold text-zinc-700 shadow-lg backdrop-blur-sm transition hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {locating ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -327,7 +335,8 @@ export default function DeliveryInfoPage() {
             }
           `}</style>
           <p className="text-xs text-zinc-400">
-            Your location is pinned on the map. Tap the button inside the map to re-center.
+            Your location is pinned on the map. Tap the button inside the map to
+            re-center.
           </p>
           {locationError && (
             <p className="text-sm font-medium text-red-500">{locationError}</p>
@@ -339,7 +348,7 @@ export default function DeliveryInfoPage() {
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
-          disabled={locating || !isWithinMagwayBounds(position[0], position[1])} 
+          disabled={locating || !isWithinMagwayBounds(position[0], position[1])}
         >
           {locating ? "Locating..." : "Confirm Order"}{" "}
           <ArrowRight size={18} className="ml-2" />

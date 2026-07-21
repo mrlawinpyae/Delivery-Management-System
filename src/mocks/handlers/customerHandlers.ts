@@ -46,7 +46,6 @@ const generatedRestaurants = Array.from({ length: 27 }).map((_, index) => {
 
 const mockRestaurants = [...explicitRestaurants, ...generatedRestaurants]
 
-
 const mockMenus: Record<string, any[]> = {}
 
 mockRestaurants.forEach((shop) => {
@@ -97,37 +96,43 @@ export const mockOrders: any[] = [
 ]
 
 export const handlers = [
-  // 1. Get All Restaurants
-  http.get("/api/restaurants", () => {
-    return HttpResponse.json({
-      message: "Restaurants fetched successfully",
-      data: mockRestaurants,
-      error: null,
-    })
-  }),
+  // 1. Get All Restaurants - Disabled to use the real backend
+  // http.get("/api/restaurants", () => {
+  //   return HttpResponse.json({
+  //     message: "Restaurants fetched successfully",
+  //     data: mockRestaurants,
+  //     error: null,
+  //   })
+  // }),
 
   // 2. Get Menus by Restaurant ID
-  http.get("/api/restaurants/:restaurantId", ({ params }) => {
-    const { restaurantId } = params as { restaurantId: string }
-    const menu = mockMenus[restaurantId]
+  // http.get("/api/restaurants/:restaurantId", ({ params }) => {
+  //   const { restaurantId } = params as { restaurantId: string }
+  //   const restaurant = mockRestaurants.find(
+  //     (r) => r.restaurantId === restaurantId
+  //   )
+  //   const menu = mockMenus[restaurantId]
 
-    if (!menu) {
-      return HttpResponse.json(
-        {
-          message: "Action processing error",
-          data: null,
-          error: "Restaurant not found",
-        },
-        { status: 404 }
-      )
-    }
+  //   if (!restaurant) {
+  //     return HttpResponse.json(
+  //       {
+  //         message: "Action processing error",
+  //         data: null,
+  //         error: "Restaurant not found",
+  //       },
+  //       { status: 404 }
+  //     )
+  //   }
 
-    return HttpResponse.json({
-      message: "Menu fetched successfully",
-      data: menu,
-      error: null,
-    })
-  }),
+  //   return HttpResponse.json({
+  //     message: "Restaurant details fetched successfully",
+  //     data: {
+  //       ...restaurant,
+  //       menuItems: menu,
+  //     },
+  //     error: null,
+  //   })
+  // }),
 
   // 3. User Login
   http.post("/api/auth/login", async ({ request }) => {
@@ -192,14 +197,15 @@ export const handlers = [
     )
   }),
 
-  http.get("/api/orders/getUserOrders/:userId", () => {
-    const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
-    return HttpResponse.json({
-      message: "Orders fetched successfully",
-      data: savedOrders,
-      error: null,
-    })
-  }),
+  // 6. Get User Orders - Disabled to use the real backend
+  // http.get("/api/orders/getUserOrders/:userId", () => {
+  //   const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
+  //   return HttpResponse.json({
+  //     message: "Orders fetched successfully",
+  //     data: savedOrders,
+  //     error: null,
+  //   })
+  // }),
 
   // 7. Get Order Details — API Contract #7
   http.get("/api/orders/getOrderDetails/:orderId", ({ params }) => {
@@ -207,9 +213,7 @@ export const handlers = [
 
     const savedOrders = JSON.parse(localStorage.getItem("mock_orders") || "[]")
 
-    const order = savedOrders.find(
-      (o: any) => o.orderId === orderId
-    )
+    const order = savedOrders.find((o: any) => o.orderId === orderId)
 
     if (!order) {
       return HttpResponse.json(

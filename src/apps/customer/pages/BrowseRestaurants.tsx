@@ -42,7 +42,7 @@ export default function BrowseRestaurants() {
             {filteredRestaurants.length > 0 ? (
               filteredRestaurants.map((shop: any) => (
                 <motion.div
-                  key={shop._id}
+                  key={shop.restaurantId}
                   layout // Enables smooth reordering animations
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}

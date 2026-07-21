@@ -20,20 +20,11 @@ export function useRestaurantDetails(restaurantId: string | undefined) {
   return useQuery({
     queryKey: ["restaurant", restaurantId],
     queryFn: async () => {
-      const resShops = await axios.get("/api/restaurants")
-
-      const currentShop = resShops.data.data.find(
-        (r: any) => r.restaurantId === restaurantId
-      )
-
-      if (!currentShop) throw new Error("Restaurant not found")
-
-      const resMenu = await axios.get(`/api/restaurants/${restaurantId}`)
-
-      return {
-        ...currentShop,
-        menuItems: resMenu.data.data,
-      }
+      // The `enabled` option ensures that `restaurantId` is a string here.
+      const { data } = await axios.get(`/api/restaurants/${restaurantId}`)
+      // This assumes the API now returns the full restaurant details
+      // including a `menuItems` property, based on the suggested API improvement.
+      return data.data
     },
     enabled: !!restaurantId,
   })

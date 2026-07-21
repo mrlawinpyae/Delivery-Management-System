@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { User, Mail, Save, ArrowLeft, Loader2, Camera } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import type { FieldErrors } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast, Toaster } from "sonner"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { useAuthStore } from "@/store/useAuthStore"
 import { isValidPhoneNumber } from "libphonenumber-js"
 import {
@@ -33,6 +33,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>
 
 export default function ProfileSettingsPage() {
+  const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const login = useAuthStore((state) => state.login)
 
@@ -44,6 +45,9 @@ export default function ProfileSettingsPage() {
 
   // ─── PHONE STATE (controlled outside RHF, same as DeliveryInfoPage) ───
   const [phone, setPhone] = useState("")
+
+  // ─── IMAGE UPLOAD STATE ───
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // ─── REACT HOOK FORM SETUP ───
   const {
@@ -62,12 +66,19 @@ export default function ProfileSettingsPage() {
   // ─── FETCH USER DATA (AXIOS) ───
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user?.userId) return
+      const id =
+        user?.userId ||
+        (user as { id?: string })?.id ||
+        (user as { _id?: string })?._id
+      if (!id) {
+        setIsLoadingData(false)
+        return
+      }
 
       try {
-        const response = await axios.get(`/api/auth/user/${user.userId}`)
+        const response = await axios.get(`/auth/user/${id}`)
 
-        const userData = response.data.data
+        const userData = response.data?.data || response.data || {}
 
         reset({
           name: userData.name || "",
@@ -90,23 +101,46 @@ export default function ProfileSettingsPage() {
     }
 
     fetchUserData()
-  }, [user?.userId, user?.image, reset])
+  }, [user, reset])
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Limit file size to 2MB to keep base64 manageable
+    // Validate that the file is an image
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file")
+      return
+    }
+
+    // Limit file size to 2MB
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Image size must be less than 2MB")
       return
     }
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string)
+    const formData = new FormData()
+    formData.append("file", file)
+
+    setIsUploadingImage(true)
+    const toastId = toast.loading("Uploading image...")
+
+    try {
+      const response = await axios.post("/images/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      setAvatarPreview(response.data)
+      toast.dismiss(toastId)
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast.error("Failed to upload image", { id: toastId })
+    } finally {
+      setIsUploadingImage(false)
+      // Reset the file input so the same file can be selected again if needed
+      e.target.value = ""
     }
-    reader.readAsDataURL(file)
   }
 
   const isImageChanged = avatarPreview !== (user?.image || "")
@@ -114,26 +148,33 @@ export default function ProfileSettingsPage() {
 
   // ─── SUBMIT HANDLER (UPDATE PROFILE) ───
   const onSubmit = async (data: ProfileFormValues) => {
-    // Validate phone number using libphonenumber-js (mirrors DeliveryInfoPage)
-    if (!phone || !isValidPhoneNumber(phone, "MM")) {
+    // Validate phone number if provided
+    let finalPhone = phone
+    if (!phone || phone === "+95") {
+      finalPhone = ""
+    } else if (!isValidPhoneNumber(phone, "MM")) {
       toast.error("Please enter a valid Myanmar phone number.")
       return
     }
 
-    if (!user?.userId) {
+    const id =
+      user?.userId ||
+      (user as { id?: string })?.id ||
+      (user as { _id?: string })?._id
+    if (!id || !user) {
       toast.error("User ID not found.")
       return
     }
 
     try {
       // Axios PUT request to update profile
-      const response = await axios.put(`/api/auth/user/${user.userId}`, {
+      const response = await axios.put(`/auth/user/${id}`, {
         name: data.name,
         image: avatarPreview,
-        phone: phone,
+        phone: finalPhone,
       })
 
-      const updatedUser = response.data.data
+      const updatedUser = response.data?.data || response.data || {}
 
       login(
         {
@@ -152,6 +193,10 @@ export default function ProfileSettingsPage() {
       })
 
       toast.success("Profile updated successfully!")
+      
+      // setTimeout(() => {
+      //   navigate("/customer")
+      // }, 1000)
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { error?: string } }
@@ -309,11 +354,12 @@ export default function ProfileSettingsPage() {
                 <button
                   disabled={
                     (!isDirty && !isImageChanged && !isPhoneChanged) ||
-                    isSubmitting
+                    isSubmitting ||
+                    isUploadingImage
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-full bg-zinc-900 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-zinc-800 hover:shadow-xl active:scale-[0.98] disabled:scale-100 disabled:opacity-50"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isUploadingImage ? (
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
                   ) : (
                     <>

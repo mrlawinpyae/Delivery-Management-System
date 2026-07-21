@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { motion } from "framer-motion"
 import { Loader2, CheckCircle2, Clock, Package, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 import type { Order } from "@/types/index.ts"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function OrderHistoryPage() {
+  const user = useAuthStore((state) => state.user)
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -33,8 +35,18 @@ export default function OrderHistoryPage() {
 
   useEffect(() => {
     const fetchOrders = async () => {
+      const id =
+        user?.userId ||
+        (user as { id?: string })?.id ||
+        (user as { _id?: string })?._id
+
+      if (!id) {
+        setIsLoading(false)
+        return
+      }
+
       try {
-        const response = await axios.get("/api/orders/getUserOrders/:userId")
+        const response = await axios.get(`/orders/getUserOrders/${id}`)
         setOrders(response.data.data)
       } catch (error) {
         toast.error("Failed to load history.")
@@ -43,7 +55,7 @@ export default function OrderHistoryPage() {
       }
     }
     fetchOrders()
-  }, [])
+  }, [user])
 
   if (isLoading) {
     return (

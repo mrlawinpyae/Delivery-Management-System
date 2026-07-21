@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, AlertCircle } from "lucide-react"
 
-import { useRestaurantDetails } from "../hooks/useRestaurants"
+import { useRestaurantDetails, useRestaurants } from "../hooks/useRestaurants"
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,18 +12,22 @@ export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const { data: restaurant, isLoading, error } = useRestaurantDetails(id)
+  // Fetch both the restaurant list (to get details) and the menu items for this restaurant
+  const { data: restaurants, isLoading: isRestaurantsLoading } = useRestaurants()
+  const { data: menuItems, isLoading: isMenuLoading, error } = useRestaurantDetails(id)
+
+  const isLoading = isRestaurantsLoading || isMenuLoading
+  const restaurantInfo = restaurants?.find((r: any) => r.restaurantId === id)
 
   // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items)
   const addToCart = useCartStore((state) => state.addToCart)
-  // const removeFromCart = useCartStore((state) => state.removeFromCart)
 
   const [seconds, setSeconds] = useState(3)
 
   // Auto-redirect logic for error
   useEffect(() => {
-    if (error || !restaurant) {
+    if (error || (!isLoading && (!restaurantInfo || !menuItems))) {
       if (seconds > 0) {
         const timer = setTimeout(() => setSeconds(seconds - 1), 1000)
         return () => clearTimeout(timer)
@@ -31,7 +35,7 @@ export default function RestaurantMenu() {
         navigate("/customer")
       }
     }
-  }, [seconds, error, restaurant, navigate])
+  }, [seconds, error, restaurantInfo, menuItems, isLoading, navigate])
 
   const handleIncrement = (item: any) => {
     addToCart({
@@ -44,10 +48,6 @@ export default function RestaurantMenu() {
     })
   }
 
-  // const handleDecrement = (itemId: string) => {
-  //   removeFromCart(itemId)
-  // }
-
   if (isLoading) {
     return (
       <div className="flex h-[50vh] animate-pulse items-center justify-center font-serif text-sm font-medium text-zinc-400 italic">
@@ -56,7 +56,7 @@ export default function RestaurantMenu() {
     )
   }
 
-  if (error || !restaurant) {
+  if (error || !restaurantInfo || !menuItems) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center gap-6 p-6 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500">
@@ -107,19 +107,19 @@ export default function RestaurantMenu() {
         <div className="relative h-60 w-full overflow-hidden rounded-3xl">
           <img
             src={
-              restaurant.image ||
+              restaurantInfo.image ||
               "https://placehold.co/1200x400?text=Restaurant+Banner"
             }
-            alt={restaurant.name}
+            alt={restaurantInfo.name}
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 p-8 text-white">
             <h1 className="font-serif text-3xl font-bold tracking-tight md:text-4xl">
-              {restaurant.name}
+              {restaurantInfo.name}
             </h1>
             <p className="mt-2 text-sm font-light text-zinc-200">
-              {restaurant.address} • Premium UCSM Standard
+              • {restaurantInfo.address}
             </p>
           </div>
         </div>
@@ -134,8 +134,10 @@ export default function RestaurantMenu() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {(restaurant?.menuItems || []).map((item: any, index: number) => {
+          {(menuItems || []).map((item: any, index: number) => {
             const currentQty = cartItems[item.itemId]?.quantity || 0
+            const isAvailable =
+              item.isAvailable !== false && item.available !== false
 
             return (
               <motion.div
@@ -152,7 +154,7 @@ export default function RestaurantMenu() {
                     alt={item.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  {!item.isAvailable && (
+                  {!isAvailable && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                       <Badge
                         variant="destructive"
@@ -186,7 +188,7 @@ export default function RestaurantMenu() {
                     {currentQty === 0 ? (
                       <button
                         onClick={() => handleIncrement(item)}
-                        disabled={!item.isAvailable}
+                        disabled={!isAvailable}
                         className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 active:scale-95 disabled:opacity-50"
                       >
                         Add

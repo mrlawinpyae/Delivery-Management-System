@@ -10,6 +10,11 @@ async function enableMocking() {
     return
   }
 
+  const useMocks = import.meta.env.VITE_USE_MOCKS === "true"
+  if (!useMocks) {
+    return
+  }
+
   const { worker } = await import("./mocks/browser")
 
   return worker.start({

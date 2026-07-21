@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -15,8 +15,8 @@ import {
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import axios from "axios"
+import { toast, Toaster } from "sonner"
+import axios from "@/lib/axios"
 import { useAuthStore } from "@/store/useAuthStore"
 
 // ─── VALIDATION SCHEMAS ───
@@ -70,7 +70,7 @@ export default function CustomerAuth() {
   })
 
   const onSubmit = async (data: AuthFormValues) => {
-    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/sign-up"
+    const endpoint = isLogin ? "/auth/login" : "/auth/sign-up"
 
     const payload = isLogin
       ? { email: data.email, password: data.password }
@@ -79,13 +79,25 @@ export default function CustomerAuth() {
     try {
       const response = await axios.post(endpoint, payload)
 
+      // 💡 1. Success Message ကို အရင်ပြမည်
+      toast.success(response.data.message || "Success!")
+
       if (isLogin) {
         const { token, ...userData } = response.data.data
         login(userData, token)
-      }
 
-      toast.success(response.data.message)
-      navigate("/customer")
+        // Login ဝင်တာ အောင်မြင်ရင်လည်း Message ဖတ်လို့ရအောင် ၁ စက္ကန့် စောင့်ပေးမည်
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        navigate("/customer")
+      } else {
+        // 💡 2. Sign Up အောင်မြင်ပါက Message ဖတ်ချိန်ရအောင် ၁.၅ စက္ကန့် စောင့်မည် (Loading လည်နေပါမည်)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+
+        // 💡 3. အချိန်ပြည့်မှသာ Login မျက်နှာပြင်သို့ ပြောင်းပေးမည်
+        setIsLogin(true)
+        reset()
+        navigate(window.location.pathname, { replace: true })
+      }
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.error || err.message || "Authentication failed"
@@ -93,6 +105,7 @@ export default function CustomerAuth() {
       toast.error("Authentication Error", {
         description: errorMessage,
       })
+      setApiError(errorMessage)
     }
   }
 
@@ -114,6 +127,7 @@ export default function CustomerAuth() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#F9F9FB] p-4 font-sans text-zinc-900">
+      <Toaster position="top-center" richColors />
       {/* ─── BACK BUTTON ─── */}
       <div className="absolute top-6 left-6 z-10 md:top-10 md:left-10">
         <Link
