@@ -35,16 +35,16 @@ const DefaultIcon = L.icon({
 })
 L.Marker.prototype.options.icon = DefaultIcon
 
-// Custom amber SVG icon for pickup locations
+// Custom amber SVG icon for pickup locations (Appetizing, high-contrast)
 const PickupIcon = L.divIcon({
   className: "",
   html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)"/>
     </filter>
-    <path filter="url(#shadow)" d="M16 2C9.37 2 4 7.37 4 14c0 9 12 26 12 26S28 23 28 14C28 7.37 22.63 2 16 2z" fill="#f59e0b" stroke="#d97706" stroke-width="1.5"/>
+    <path filter="url(#shadow)" d="M16 2C9.37 2 4 7.37 4 14c0 9 12 26 12 26S28 23 28 14C28 7.37 22.63 2 16 2z" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
     <circle cx="16" cy="14" r="5" fill="white"/>
-    <path d="M16 11.5v5M13.5 14h5" stroke="#d97706" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M16 11.5v5M13.5 14h5" stroke="#b45309" stroke-width="1.8" stroke-linecap="round"/>
   </svg>`,
   iconSize: [32, 42],
   iconAnchor: [16, 42],
@@ -132,6 +132,53 @@ function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null>
   const map = useMap()
   mapRef.current = map
   return null
+}
+
+// Helper component to fetch and draw an actual road route
+function RoutingLine({
+  start,
+  end,
+  baseColor,
+  glowColor,
+  hasShadow = false,
+}: {
+  start: [number, number]
+  end: [number, number]
+  baseColor: string
+  glowColor: string
+  hasShadow?: boolean
+}) {
+  const [positions, setPositions] = useState<[number, number][]>([start, end])
+
+  useEffect(() => {
+    let active = true
+    const fetchRoute = async () => {
+      try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`
+        const res = await axios.get(url)
+        if (active && res.data.routes && res.data.routes.length > 0) {
+          const coords = res.data.routes[0].geometry.coordinates
+          const latLngs: [number, number][] = coords.map((c: [number, number]) => [c[1], c[0]])
+          setPositions(latLngs)
+        }
+      } catch (err) {
+        console.error("OSRM routing failed, falling back to straight line:", err)
+        if (active) setPositions([start, end])
+      }
+    }
+    fetchRoute()
+    return () => {
+      active = false
+    }
+  }, [start[0], start[1], end[0], end[1]])
+
+  return (
+    <>
+      {hasShadow && <Polyline positions={positions} color="#000000" weight={12} opacity={0.15} />}
+      <Polyline positions={positions} color={glowColor} weight={10} dashArray="1, 0" opacity={0.2} />
+      <Polyline positions={positions} color={baseColor} weight={3.5} dashArray="10, 8" opacity={1} />
+    </>
+  )
 }
 
 export default function RiderTaskDetails() {
@@ -423,46 +470,25 @@ export default function RiderTaskDetails() {
 
                     {/* Rider → Delivery blue dashed route (hidden when a pickup is selected) */}
                     {riderPosition && selectedPickupIdx === null && (
-                      <>
-                        <Polyline
-                          positions={[riderPosition, mapData.dest]}
-                          color={isDark ? "#38bdf8" : "#3b82f6"}
-                          weight={10}
-                          dashArray="1, 0"
-                          opacity={0.18}
-                        />
-                        <Polyline
-                          positions={[riderPosition, mapData.dest]}
-                          color={isDark ? "#38bdf8" : "#2563eb"}
-                          weight={3.5}
-                          dashArray="10, 8"
-                          opacity={1}
-                        />
-                      </>
+                      <RoutingLine
+                        start={riderPosition}
+                        end={mapData.dest}
+                        glowColor={isDark ? "#38bdf8" : "#3b82f6"}
+                        baseColor={isDark ? "#38bdf8" : "#2563eb"}
+                      />
                     )}
 
                     {/* Rider → Pickup yellow dashed route (shown when a pickup marker is clicked) */}
                     {selectedPickupIdx !== null && riderPosition && (() => {
                       const pickup = mapData.pickups[selectedPickupIdx]
                       return pickup ? (
-                        <>
-                          {/* Glow layer */}
-                          <Polyline
-                            positions={[riderPosition, pickup.position]}
-                            color="#eab308"
-                            weight={10}
-                            dashArray="1, 0"
-                            opacity={0.2}
-                          />
-                          {/* Crisp dashed line */}
-                          <Polyline
-                            positions={[riderPosition, pickup.position]}
-                            color="#ca8a04"
-                            weight={3.5}
-                            dashArray="10, 8"
-                            opacity={1}
-                          />
-                        </>
+                        <RoutingLine
+                          start={riderPosition}
+                          end={pickup.position}
+                          glowColor={isDark ? "#fcd34d" : "#fbbf24"}
+                          baseColor={isDark ? "#f59e0b" : "#ea580c"}
+                          hasShadow={true}
+                        />
                       ) : null
                     })()}
                   </MapContainer>
