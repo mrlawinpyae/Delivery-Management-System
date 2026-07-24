@@ -96,6 +96,22 @@ export default function RiderTasks() {
     DELIVERED: isDark ? "text-slate-400 bg-slate-400/10 border-slate-400/20" : "text-slate-600 bg-slate-50 border-slate-200",
   }
 
+  const handleAcceptTask = async (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation()
+    try {
+      await axios.put(`/api/orders/${orderId}/status`, { status: "OUT_FOR_DELIVERY" })
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, status: "OUT_FOR_DELIVERY" } : o))
+      )
+      toast.success("Task successfully accepted!", {
+        description: "Status changed to OUT FOR DELIVERY."
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to accept task")
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* ─── Hero Overview Card ─── */}
@@ -293,6 +309,18 @@ export default function RiderTasks() {
                         </span>
                       </div>
                     </div>
+
+                    {/* Action Button */}
+                    {order.status === "PREPARING" && (
+                      <div className="mt-4 pt-2">
+                        <button
+                          onClick={(e) => handleAcceptTask(e, order._id)}
+                          className="w-full rounded-xl bg-sky-500 py-2.5 text-center text-sm font-bold text-white shadow-md hover:bg-sky-600 active:scale-95 transition-all"
+                        >
+                          Accept Task
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )
               })}
