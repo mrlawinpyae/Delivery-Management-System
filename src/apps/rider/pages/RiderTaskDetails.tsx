@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   Phone,

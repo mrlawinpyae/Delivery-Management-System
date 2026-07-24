@@ -1,13 +1,13 @@
 // src/apps/customer/hooks/useRestaurants.ts
 import { useQuery } from "@tanstack/react-query"
-import axios from "axios"
+import axios from "@/lib/axios"
 
 // 1. Get All Restaurants Hook
 export function useRestaurants() {
   return useQuery({
     queryKey: ["restaurants"],
     queryFn: async () => {
-      const { data } = await axios.get("/api/restaurants")
+      const { data } = await axios.get("/restaurants")
       return data.data
     },
   })

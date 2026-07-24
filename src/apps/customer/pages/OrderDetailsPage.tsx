@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { motion } from "framer-motion"
 import { Loader2, ArrowLeft, Package, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
@@ -14,7 +14,7 @@ export default function OrderDetailsPage() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(`/api/orders/getOrderDetails/${id}`)
+        const response = await axios.get(`/orders/getOrderDetails/${id}`)
         // console.log("API Response Data:", response.data.data.deliveryAddress) // Debugging log
         setOrder(response.data.data)
       } catch (error) {

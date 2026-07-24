@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { toast } from "sonner"
 
 // ─── Animation ───────────────────────────────────────────────────────────────

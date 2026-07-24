@@ -78,8 +78,13 @@ export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={user?.image || "https://github.com/shadcn.png"} />
-                  <AvatarFallback>{user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}</AvatarFallback>
+                  <AvatarImage 
+                    src={user?.image ? user.image : "https://github.com/shadcn.png"} 
+                    alt={user?.name || "User Avatar"}
+                  />
+                  <AvatarFallback>
+                    {user?.name ? user.name.slice(0, 2).toUpperCase() : "US"}
+                  </AvatarFallback>
                 </Avatar>
                 <ChevronDown size={12} className="text-zinc-400" />
               </DropdownMenuTrigger>
