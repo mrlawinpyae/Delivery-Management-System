@@ -21,7 +21,7 @@ export function useRestaurantDetails(restaurantId: string | undefined) {
     queryKey: ["restaurant", restaurantId],
     queryFn: async () => {
       // The `enabled` option ensures that `restaurantId` is a string here.
-      const { data } = await axios.get(`/api/restaurants/${restaurantId}`)
+      const { data } = await axios.get(`/restaurants/${restaurantId}`)
       // This assumes the API now returns the full restaurant details
       // including a `menuItems` property, based on the suggested API improvement.
       return data.data

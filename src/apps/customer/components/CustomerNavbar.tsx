@@ -163,7 +163,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
                 <Avatar className="h-7 w-7">
                   <AvatarImage
-                    src={user?.image ? user.image : "https://github.com/shadcn.png"}
+                    src={user?.img || user?.image || "https://github.com/shadcn.png"}
                     alt={user?.name || "User Avatar"}
                   />
                   <AvatarFallback>

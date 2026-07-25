@@ -36,6 +36,7 @@ export default function ProfileSettingsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const login = useAuthStore((state) => state.login)
+  const updateUser = useAuthStore((state) => state.updateUser)
 
   // ─── LOADING STATE FOR FETCHING DATA ───
   const [isLoadingData, setIsLoadingData] = useState(true)
@@ -63,20 +64,21 @@ export default function ProfileSettingsPage() {
     },
   })
 
+  const userId =
+    user?.userId ||
+    (user as { id?: string })?.id ||
+    (user as { _id?: string })?._id
+
   // ─── FETCH USER DATA (AXIOS) ───
   useEffect(() => {
     const fetchUserData = async () => {
-      const id =
-        user?.userId ||
-        (user as { id?: string })?.id ||
-        (user as { _id?: string })?._id
-      if (!id) {
+      if (!userId) {
         setIsLoadingData(false)
         return
       }
 
       try {
-        const response = await axios.get(`/auth/user/${id}`)
+        const response = await axios.get(`/auth/user/${userId}`)
 
         const userData = response.data?.data || response.data || {}
 
@@ -89,9 +91,13 @@ export default function ProfileSettingsPage() {
         setPhone(userData.phone || "")
 
         // Local user image has precedence, then API image, then default fallback
-        setAvatarPreview(
-          user?.image || userData.image || "https://github.com/shadcn.png"
-        )
+        const currentImg =
+          user?.img ||
+          user?.image ||
+          userData.img ||
+          userData.image ||
+          "https://github.com/shadcn.png"
+        setAvatarPreview(currentImg)
       } catch (error) {
         console.error("Error fetching user data:", error)
         toast.error("Failed to load profile data")
@@ -101,7 +107,7 @@ export default function ProfileSettingsPage() {
     }
 
     fetchUserData()
-  }, [user, reset])
+  }, [userId, reset])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -131,7 +137,20 @@ export default function ProfileSettingsPage() {
           "Content-Type": "multipart/form-data",
         },
       })
-      setAvatarPreview(response.data)
+
+      const uploadedUrl =
+        typeof response.data === "string"
+          ? response.data
+          : (response.data?.url ||
+             response.data?.data?.url ||
+             response.data?.img ||
+             response.data?.image ||
+             "")
+
+      if (uploadedUrl) {
+        setAvatarPreview(uploadedUrl)
+        updateUser({ img: uploadedUrl, image: uploadedUrl })
+      }
       toast.dismiss(toastId)
     } catch (error) {
       console.error("Error uploading image:", error)
@@ -143,7 +162,7 @@ export default function ProfileSettingsPage() {
     }
   }
 
-  const isImageChanged = avatarPreview !== (user?.image || "")
+  const isImageChanged = avatarPreview !== (user?.img || user?.image || "")
   const isPhoneChanged = phone !== (user?.phone || "")
 
   // ─── SUBMIT HANDLER (UPDATE PROFILE) ───
@@ -171,24 +190,23 @@ export default function ProfileSettingsPage() {
       const response = await axios.put(`/auth/user/${id}`, {
         name: data.name,
         image: avatarPreview,
+        img: avatarPreview,
         phone: finalPhone,
       })
 
       const updatedUser = response.data?.data || response.data || {}
+      const newImg = updatedUser.img || updatedUser.image || avatarPreview
 
-      login(
-        {
-          ...user,
-          name: updatedUser.name,
-          image: updatedUser.image,
-          phone: updatedUser.phone,
-        },
-        useAuthStore.getState().token!
-      )
+      updateUser({
+        name: updatedUser.name || data.name,
+        image: newImg,
+        img: newImg,
+        phone: updatedUser.phone ?? finalPhone,
+      })
 
       // Reset RHF internal state with the new values so isDirty resets correctly
       reset({
-        name: updatedUser.name,
+        name: updatedUser.name || data.name,
         email: data.email,
       })
 
