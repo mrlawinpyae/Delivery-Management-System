@@ -62,7 +62,7 @@ export default function RiderTasks() {
     let active = true
     const loadAssignedOrders = async () => {
       try {
-        const res = await axios.get("/api/orders/ord_1003/getAssignedOrders")
+        const res = await axios.get("/orders/ord_1003/getAssignedOrders")
         if (!active) return
         if (res.data && res.data.data) {
           const fetchedOrders = res.data.data
@@ -99,7 +99,7 @@ export default function RiderTasks() {
   const handleAcceptTask = async (e: React.MouseEvent, orderId: string) => {
     e.stopPropagation()
     try {
-      await axios.put(`/api/orders/${orderId}/status`, { status: "OUT_FOR_DELIVERY" })
+      await axios.put(`/orders/${orderId}/status`, { status: "OUT_FOR_DELIVERY" })
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, status: "OUT_FOR_DELIVERY" } : o))
       )

@@ -49,7 +49,7 @@ export default function RiderProfile() {
     let isMounted = true
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`/api/auth/user/${userId}`)
+        const res = await axios.get(`/auth/user/${userId}`)
         if (isMounted && res.data && res.data.data) {
           setProfile(res.data.data)
         }

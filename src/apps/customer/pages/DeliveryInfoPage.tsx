@@ -1,5 +1,5 @@
 import axios from "@/lib/axios"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   MapPin,
@@ -20,38 +20,17 @@ import {
 import "react-international-phone/style.css"
 import { toast, Toaster } from "sonner"
 
-// Leaflet imports
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet"
-import "leaflet/dist/leaflet.css"
-import L from "leaflet"
-
-// Marker icon setup so the default pin renders correctly
-import icon from "leaflet/dist/images/marker-icon.png"
-import iconShadow from "leaflet/dist/images/marker-shadow.png"
+// Google Maps
+import {
+  GoogleMap,
+  useLoadScript,
+  OverlayView,
+} from "@react-google-maps/api"
 import { useCartStore } from "@/store/useCartStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useLocation } from "react-router-dom"
 
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-})
-L.Marker.prototype.options.icon = DefaultIcon
-
-// Pulsing cyan dot — marks the customer's pinned delivery location
-const LocationDotIcon = L.divIcon({
-  className: "",
-  html: `<div style="position:relative;width:24px;height:24px;">
-    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(6,182,212,0.25);animation:ping 1.4s cubic-bezier(0,0,0.2,1) infinite;"></div>
-    <div style="position:absolute;inset:4px;border-radius:50%;background:#06b6d4;border:2.5px solid white;box-shadow:0 0 0 2px rgba(6,182,212,0.5);"></div>
-    <style>@keyframes ping{75%,100%{transform:scale(2);opacity:0;}}</style>
-  </div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-  popupAnchor: [0, -14],
-})
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
 
 const deliverySchema = z.object({
   phone: z.string().refine(
@@ -70,26 +49,68 @@ const myanmarCountry = defaultCountries.find(
 )
 
 // Magway city center
-const MAGWAY_CENTER: [number, number] = [20.1489, 94.9211]
+const MAGWAY_CENTER = { lat: 20.1489, lng: 94.9211 }
 
-// Landmarks included in scope:
-// - Magway city center
-// - Magway University (Taungdwin Road, south part of the city) — 20.13611, 94.93500
-// - Technological University, Magway (near Kanbyar village, north of the city) — 20.19917, 95.00778
-// A tight bounding box that covers these 3 locations (not the entire region)
-const MAGWAY_BOUNDS: [[number, number], [number, number]] = [
-  [20.085, 94.885], // Southwest corner — small buffer below Magway University
-  [20.235, 95.04], // Northeast corner — small buffer above TU Magway
-]
+// Magway area bounds
+const MAGWAY_BOUNDS = {
+  south: 20.085,
+  west: 94.885,
+  north: 20.235,
+  east: 95.04,
+}
 
-// Minimum zoom level required so the area outside the bounds is never visible
-// (too low a zoom level makes the viewport wider than the bounds box, revealing the outside map)
-const MAGWAY_MIN_ZOOM = 13
+const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" }
+
+const MAP_OPTIONS: google.maps.MapOptions = {
+  restriction: {
+    latLngBounds: MAGWAY_BOUNDS,
+    strictBounds: true,
+  },
+  minZoom: 13,
+  disableDefaultUI: true,
+  zoomControl: true,
+  gestureHandling: "greedy",
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: false,
+}
 
 // Checks whether a GPS-derived location falls within the Magway bounds
 function isWithinMagwayBounds(lat: number, lng: number) {
-  const [[south, west], [north, east]] = MAGWAY_BOUNDS
-  return lat >= south && lat <= north && lng >= west && lng <= east
+  return (
+    lat >= MAGWAY_BOUNDS.south &&
+    lat <= MAGWAY_BOUNDS.north &&
+    lng >= MAGWAY_BOUNDS.west &&
+    lng <= MAGWAY_BOUNDS.east
+  )
+}
+
+// Pulsing cyan dot overlay for the delivery marker
+function PulsingDot() {
+  return (
+    <div style={{ position: "relative", width: 24, height: 24 }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          background: "rgba(6,182,212,0.25)",
+          animation: "ping 1.4s cubic-bezier(0,0,0.2,1) infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 4,
+          borderRadius: "50%",
+          background: "#06b6d4",
+          border: "2.5px solid white",
+          boxShadow: "0 0 0 2px rgba(6,182,212,0.5)",
+        }}
+      />
+      <style>{`@keyframes ping{75%,100%{transform:scale(2);opacity:0;}}`}</style>
+    </div>
+  )
 }
 
 export default function DeliveryInfoPage() {
@@ -98,24 +119,23 @@ export default function DeliveryInfoPage() {
   const [address, setAddress] = useState("")
   const [locating, setLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
-  const mapRef = useRef<L.Map | null>(null)
+  const mapRef = useRef<google.maps.Map | null>(null)
   const { items, clearCart } = useCartStore()
   const user = useAuthStore((state) => state.user)
 
-  const [position, setPosition] = useState<[number, number]>(MAGWAY_CENTER)
+  const [position, setPosition] = useState<{ lat: number; lng: number }>(
+    MAGWAY_CENTER
+  )
 
-  // Marker is now fixed in place — it only moves when the user taps
-  // "Use Current Location", never by clicking/dragging on the map.
-  function LocationMarker() {
-    return <Marker position={position} icon={LocationDotIcon} />
-  }
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    language: "my", // Display map labels and UI text in Myanmar/Burmese script
+    region: "MM",   // Myanmar region context
+  })
 
-  // Capture the map instance so we can call flyTo() on it programmatically
-  function MapRefSetter() {
-    const map = useMap()
+  const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map
-    return null
-  }
+  }, [])
 
   // Triggered when the user taps "Current Location" — requests GPS permission
   // from the device, then points the marker at the user's location on the map
@@ -144,9 +164,10 @@ export default function DeliveryInfoPage() {
           return
         }
 
-        const newPosition: [number, number] = [latitude, longitude]
+        const newPosition = { lat: latitude, lng: longitude }
         setPosition(newPosition)
-        mapRef.current?.flyTo(newPosition, 16, { duration: 1 })
+        mapRef.current?.panTo(newPosition)
+        mapRef.current?.setZoom(16)
       },
       (err) => {
         setLocating(false)
@@ -170,7 +191,7 @@ export default function DeliveryInfoPage() {
 
   useEffect(() => {
     const fetchAddress = async () => {
-      const [lat, lng] = position
+      const { lat, lng } = position
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
@@ -213,8 +234,8 @@ export default function DeliveryInfoPage() {
       totalAmount,
       shipping_phone: phone,
       deliveryAddress: address,
-      latitude: position[0],
-      longitude: position[1],
+      latitude: position.lat,
+      longitude: position.lng,
       items: Object.values(items).map((i) => ({
         restaurantId: i.restaurantId,
         name: i.name,
@@ -251,6 +272,7 @@ export default function DeliveryInfoPage() {
   useEffect(() => {
     handleUseCurrentLocation()
   }, [])
+
   return (
     <div className="mx-auto w-full max-w-lg px-6 py-10">
       <Toaster position="top-center" richColors />
@@ -284,59 +306,52 @@ export default function DeliveryInfoPage() {
             <label className="flex items-center gap-2 text-sm font-medium text-zinc-900">
               <MapPin size={16} /> Delivery Location
             </label>
-          </div>
-
-          {/* Map Container — wrapped with isolate so Leaflet's internal
-              z-index (panes/controls go up to ~1000) can never escape
-              above the page navbar, even while scrolling. */}
-          <div className="relative isolate z-0 h-64 w-full overflow-hidden rounded-xl border border-zinc-200">
-            <MapContainer
-              center={position}
-              zoom={14}
-              className="h-full w-full"
-              maxBounds={MAGWAY_BOUNDS}
-              maxBoundsViscosity={1.0}
-              minZoom={MAGWAY_MIN_ZOOM}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <LocationMarker />
-              <MapRefSetter />
-            </MapContainer>
-
-            {/* Use Current Location — overlaid inside the map, bottom-right */}
             <button
               type="button"
               onClick={handleUseCurrentLocation}
               disabled={locating}
-              className="absolute right-3 bottom-3 z-[1000] flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/90 px-3 py-2 text-xs font-bold text-zinc-700 shadow-lg backdrop-blur-sm transition hover:bg-zinc-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {locating ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={12} className="animate-spin" />
               ) : (
-                <LocateFixed size={14} />
+                <LocateFixed size={12} />
               )}
               {locating ? "Locating..." : "Use Current Location"}
             </button>
           </div>
-          {/* Cap Leaflet's internal stacking context so its panes/controls
-              (which default to z-index up to 1000) never render above
-              fixed/sticky page chrome like the navbar. */}
-          <style>{`
-            .leaflet-pane,
-            .leaflet-top,
-            .leaflet-bottom {
-              z-index: 0 !important;
-            }
-            .leaflet-control {
-              z-index: 1 !important;
-            }
-          `}</style>
+
+          {/* Map Container */}
+          <div className="relative isolate z-0 h-64 w-full overflow-hidden rounded-xl border border-zinc-200">
+            {!isLoaded ? (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-50">
+                <Loader2 className="animate-spin text-zinc-400" size={24} />
+              </div>
+            ) : (
+              <GoogleMap
+                mapContainerStyle={MAP_CONTAINER_STYLE}
+                center={position}
+                zoom={14}
+                options={MAP_OPTIONS}
+                onLoad={onMapLoad}
+              >
+                {/* Pulsing cyan dot marker at the delivery position */}
+                <OverlayView
+                  position={position}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                  getPixelPositionOffset={(width, height) => ({
+                    x: -(width / 2),
+                    y: -(height / 2),
+                  })}
+                >
+                  <PulsingDot />
+                </OverlayView>
+              </GoogleMap>
+            )}
+          </div>
+
           <p className="text-xs text-zinc-400">
-            Your location is pinned on the map. Tap the button inside the map to
-            re-center.
+            Your location is pinned on the map. Tap "Use Current Location" to re-center.
           </p>
           {locationError && (
             <p className="text-sm font-medium text-red-500">{locationError}</p>
@@ -348,7 +363,7 @@ export default function DeliveryInfoPage() {
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
-          disabled={locating || !isWithinMagwayBounds(position[0], position[1])}
+          disabled={locating || !isWithinMagwayBounds(position.lat, position.lng)}
         >
           {locating ? "Locating..." : "Confirm Order"}{" "}
           <ArrowRight size={18} className="ml-2" />
