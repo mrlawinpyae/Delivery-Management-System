@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
 import {
@@ -9,6 +10,7 @@ import {
   ShieldCheck,
   Info,
   Loader2,
+  LogOut,
 } from "lucide-react"
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -38,6 +40,13 @@ export default function RiderProfile() {
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
   const loggedInUser = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate("/customer/login")
+  }
 
   const [profile, setProfile] = useState<UserProfileData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -294,6 +303,21 @@ export default function RiderProfile() {
         <p className="text-[11px] leading-relaxed">
           Profile details are read-only. Contact support for changes.
         </p>
+      </motion.div>
+
+      {/* ── Logout Button ── */}
+      <motion.div variants={fade}>
+        <button
+          onClick={handleLogout}
+          className={`flex w-full items-center justify-center gap-2.5 rounded-2xl border px-5 py-3.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
+            isDark
+              ? "border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+              : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+          }`}
+        >
+          <LogOut size={16} strokeWidth={2} />
+          Log Out
+        </button>
       </motion.div>
     </motion.div>
   )

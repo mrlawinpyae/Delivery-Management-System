@@ -11,6 +11,7 @@ import OrderDetailsPage from "@/apps/customer/pages/OrderDetailsPage"
 import CustomerAuth from "@/apps/customer/pages/CustomerAuth"
 import ProtectedRoute from "@/apps/customer/components/ProtectedRoute"
 import GuestRoute from "@/apps/customer/components/GuestRoute"
+import RoleGuard, { RoleRedirect } from "@/components/RoleGuard"
 import ProfileSettingsPage from "@/apps/customer/pages/ProfileSettingsPage"
 import RiderTasks from "@/apps/rider/pages/RiderTasks"
 import RiderTaskDetails from "@/apps/rider/pages/RiderTaskDetails"
@@ -32,82 +33,97 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // --- APP A: Customer Routes ---
+  // --- APP A: Customer Routes (guests + CUSTOMER role only) ---
   {
-    path: "/customer",
-    element: <CustomerLayout />,
+    element: <RoleRedirect allowedRoles={["CUSTOMER"]} />,
     children: [
       {
-        path: "",
-        element: <BrowseRestaurants />,
-      },
-      {
-        path: "restaurant/:id",
-        element: <RestaurantMenu />,
-      },
-      {
-        path: "checkout",
-        element: <CheckoutPage />,
-      },
-      {
-        element: <ProtectedRoute />,
+        path: "/customer",
+        element: <CustomerLayout />,
         children: [
           {
-            path: "delivery-info",
-            element: <DeliveryInfoPage />,
+            path: "",
+            element: <BrowseRestaurants />,
           },
           {
-            path: "order-history",
-            element: <OrderHistoryPage />,
+            path: "restaurant/:id",
+            element: <RestaurantMenu />,
           },
           {
-            path: "order/:id",
-            element: <OrderDetailsPage />,
+            path: "checkout",
+            element: <CheckoutPage />,
           },
           {
-            path: "profile",
-            element: <ProfileSettingsPage />,
+            element: <ProtectedRoute />,
+            children: [
+              {
+                path: "delivery-info",
+                element: <DeliveryInfoPage />,
+              },
+              {
+                path: "order-history",
+                element: <OrderHistoryPage />,
+              },
+              {
+                path: "order/:id",
+                element: <OrderDetailsPage />,
+              },
+              {
+                path: "profile",
+                element: <ProfileSettingsPage />,
+              },
+            ],
           },
         ],
       },
     ],
   },
-  // --- APP B: Merchant Routes ---
+  // --- APP B: Merchant Routes (ADMIN only) ---
   {
-    path: "/merchant",
-    element: <MerchantLayout />,
+    element: <RoleGuard allowedRoles={["ADMIN"]} />,
     children: [
       {
-        path: "",
-        element: (
-          <div className="rounded-xl bg-white p-6 shadow">
-            <h2 className="mb-2 text-2xl font-bold text-zinc-800">
-              Order Management
-            </h2>
-            <p className="text-zinc-600">
-              Incoming Orders Dashboard will be here.
-            </p>
-          </div>
-        ),
+        path: "/admin",
+        element: <MerchantLayout />,
+        children: [
+          {
+            path: "",
+            element: (
+              <div className="rounded-xl bg-white p-6 shadow">
+                <h2 className="mb-2 text-2xl font-bold text-zinc-800">
+                  Order Management
+                </h2>
+                <p className="text-zinc-600">
+                  Incoming Orders Dashboard will be here.
+                </p>
+              </div>
+            ),
+          },
+        ],
       },
     ],
   },
-  // --- APP C: Rider Routes ---
+  // --- APP C: Rider Routes (RIDER only) ---
   {
-    path: "/rider",
-    element: <RiderLayout />,
+    element: <RoleGuard allowedRoles={["RIDER"]} />,
     children: [
       {
-        path: "",
-        element: <RiderTasks />,
-      },
-      {
-        path: "profile",
-        element: <RiderProfile />,
-      },
-      {
-        path: ":id",
-        element: <RiderTaskDetails />,
+        path: "/rider",
+        element: <RiderLayout />,
+        children: [
+          {
+            path: "",
+            element: <RiderTasks />,
+          },
+          {
+            path: "profile",
+            element: <RiderProfile />,
+          },
+          {
+            path: ":id",
+            element: <RiderTaskDetails />,
+          },
+        ],
       },
     ],
   },

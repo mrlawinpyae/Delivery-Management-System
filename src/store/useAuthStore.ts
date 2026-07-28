@@ -1,11 +1,12 @@
 // src/store/useAuthStore.ts
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import type { UserRole } from "@/types"
 
 interface User {
   userId: string
   name: string
-  role: string
+  role: UserRole
   image?: string
   img?: string
   phone?: string
