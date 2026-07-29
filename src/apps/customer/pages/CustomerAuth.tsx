@@ -79,21 +79,21 @@ export default function CustomerAuth() {
     try {
       const response = await axios.post(endpoint, payload)
 
-      // 💡 1. Success Message ကို အရင်ပြမည်
+    
       toast.success(response.data.message || "Success!")
 
       if (isLogin) {
         const { token, ...userData } = response.data.data
         login(userData, token)
 
-        // Login ဝင်တာ အောင်မြင်ရင်လည်း Message ဖတ်လို့ရအောင် ၁ စက္ကန့် စောင့်ပေးမည်
+      
         await new Promise((resolve) => setTimeout(resolve, 1000))
         navigate("/customer")
       } else {
-        // 💡 2. Sign Up အောင်မြင်ပါက Message ဖတ်ချိန်ရအောင် ၁.၅ စက္ကန့် စောင့်မည် (Loading လည်နေပါမည်)
+   
         await new Promise((resolve) => setTimeout(resolve, 1500))
 
-        // 💡 3. အချိန်ပြည့်မှသာ Login မျက်နှာပြင်သို့ ပြောင်းပေးမည်
+      
         setIsLogin(true)
         reset()
         navigate(window.location.pathname, { replace: true })

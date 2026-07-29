@@ -58,3 +58,46 @@ export interface Order {
   items: OrderItem[]
   createdAt?: string
 }
+
+// ── Admin / Rider Management ──────────────────────────────────────────────────
+
+export interface RiderVehicle {
+  id: string
+  riderId: string
+  type: string
+  licenceNumber: string
+  createdAt: string
+}
+
+export interface RiderSummary {
+  riderId: string
+  name: string
+  phone: string | null
+  status: "AVAILABLE" | "BUSY" | "OFFLINE"
+}
+
+export interface CreateRiderPayload {
+  name: string
+  phone: string
+  email: string
+  password: string
+  vehicleType: string
+  licenceNumber: string
+}
+
+export interface UpdateRiderPayload {
+  name?: string
+  image?: string
+  nrcNumber?: string
+}
+
+export interface UpdateVehiclePayload {
+  type: string
+  licenceNumber: string
+}
+
+export interface AdminOrder {
+  orderId: string
+  totalAmount: number
+  status: OrderStatus
+}

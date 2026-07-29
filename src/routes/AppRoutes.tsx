@@ -16,6 +16,8 @@ import ProfileSettingsPage from "@/apps/customer/pages/ProfileSettingsPage"
 import RiderTasks from "@/apps/rider/pages/RiderTasks"
 import RiderTaskDetails from "@/apps/rider/pages/RiderTaskDetails"
 import RiderProfile from "@/apps/rider/pages/RiderProfile"
+import AdminOrdersPage from "@/apps/merchant/pages/AdminOrdersPage"
+import AdminRidersPage from "@/apps/merchant/pages/AdminRidersPage"
 
 
 
@@ -88,16 +90,11 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "",
-            element: (
-              <div className="rounded-xl bg-white p-6 shadow">
-                <h2 className="mb-2 text-2xl font-bold text-zinc-800">
-                  Order Management
-                </h2>
-                <p className="text-zinc-600">
-                  Incoming Orders Dashboard will be here.
-                </p>
-              </div>
-            ),
+            element: <AdminOrdersPage />,
+          },
+          {
+            path: "riders",
+            element: <AdminRidersPage />,
           },
         ],
       },
