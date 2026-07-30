@@ -30,12 +30,13 @@ import {
   parseCountry,
 } from "react-international-phone"
 import "react-international-phone/style.css"
+import { MyanmarNrcInput } from "@/components/ui/myanmar-nrc-input"
 
 const myanmarCountry = defaultCountries.find(
   (c) => parseCountry(c).iso2 === "mm"
 )
 
-type CombinedRiderForm = CreateRiderForm & UpdateRiderForm
+type CombinedRiderForm = CreateRiderForm & UpdateRiderForm & { nrcNumber?: string }
 
 export interface RiderFormDialogProps {
   open: boolean
@@ -56,6 +57,7 @@ export function RiderFormDialog({
 }: RiderFormDialogProps) {
   const [isEdit, setIsEdit] = useState(initialIsEdit)
   const [phone, setPhone] = useState("")
+  const [nrcNumber, setNrcNumber] = useState("")
   const [avatarPreview, setAvatarPreview] = useState<string>("")
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
@@ -88,7 +90,7 @@ export function RiderFormDialog({
     if (open && isEdit && rider) {
       const initialPhone = rider.phone || ""
       setPhone(initialPhone)
-      setAvatarPreview("")
+      setAvatarPreview((rider.image || ""))
       reset({
         name: rider.name,
         phone: initialPhone,
@@ -97,7 +99,7 @@ export function RiderFormDialog({
         vehicleType: "",
         licenceNumber: "",
         nrcNumber: "",
-        image: "",
+        image: (rider.image || ""),
       })
     }
   }, [open, isEdit, rider, reset])
@@ -153,6 +155,7 @@ export function RiderFormDialog({
     if (!v) {
       reset()
       setPhone("")
+      setNrcNumber("")
       setAvatarPreview("")
       setIsUploadingImage(false)
       setIsEdit(initialIsEdit)
@@ -160,28 +163,6 @@ export function RiderFormDialog({
     onOpenChange(v)
   }
 
-  const toggleMode = () => {
-    const newMode = !isEdit
-    setIsEdit(newMode)
-    if (newMode && rider) {
-      const initialPhone = rider.phone || ""
-      setPhone(initialPhone)
-      reset({
-        name: rider.name,
-        phone: initialPhone,
-        email: "",
-        password: "",
-        vehicleType: "",
-        licenceNumber: "",
-        nrcNumber: "",
-        image: "",
-      })
-    } else {
-      setPhone("")
-      reset({})
-    }
-    setAvatarPreview("")
-  }
 
   const onSubmit = async (data: CombinedRiderForm) => {
     if (isEdit) {
@@ -234,7 +215,7 @@ export function RiderFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-white text-slate-900 border border-slate-200/80 shadow-2xl">
+      <DialogContent className="sm:max-w-md bg-white text-slate-900 border border-slate-200/80 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden p-0 gap-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={isEdit ? "edit" : "create"}
@@ -242,8 +223,9 @@ export function RiderFormDialog({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
+            className="flex flex-col flex-1 overflow-hidden min-h-0"
           >
-            <DialogHeader className="mb-4">
+            <DialogHeader className="px-6 pt-6 pb-4 shrink-0 shadow-xs z-10 bg-white">
               <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 {isEdit ? <Pencil className="h-5 w-5 text-indigo-600" /> : <UserPlus className="h-5 w-5 text-indigo-600" />}
                 {isEdit ? "Edit Rider Info" : "Create New Rider"}
@@ -257,7 +239,8 @@ export function RiderFormDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit, onFormError)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {/* Profile Image Uploader (Shared layout) */}
               <div className="mb-2 flex flex-col items-center gap-3">
                 <div className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-slate-200 shadow-sm transition-all hover:border-slate-400 hover:shadow-md">
@@ -359,6 +342,18 @@ export function RiderFormDialog({
                 />
               </FormField>
 
+                {/* Myanmar NRC Number */}
+                <FormField label="Myanmar NRC Number">
+                  <MyanmarNrcInput
+                    value={nrcNumber}
+                    disabled={isEdit}
+                    onChange={(val) => {
+                      setNrcNumber(val)
+                      setValue("nrcNumber", val, { shouldValidate: false })
+                    }}
+                  />
+                </FormField>
+
               {/* Grid 2: Vehicle Type & Licence Number */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="Vehicle Type">
@@ -384,7 +379,8 @@ export function RiderFormDialog({
               </div>
 
               {/* Buttons */}
-              <DialogFooter className="pt-2 flex-col sm:flex-row gap-2">
+              </div>
+              <DialogFooter className="px-6 py-4 shrink-0 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"

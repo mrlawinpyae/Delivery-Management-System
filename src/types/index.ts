@@ -74,6 +74,7 @@ export interface RiderSummary {
   name: string
   phone: string | null
   status: "AVAILABLE" | "BUSY" | "OFFLINE"
+  image?: string
 }
 
 export interface CreateRiderPayload {
