@@ -18,6 +18,8 @@ import RiderTaskDetails from "@/apps/rider/pages/RiderTaskDetails"
 import RiderProfile from "@/apps/rider/pages/RiderProfile"
 import AdminOrdersPage from "@/apps/merchant/pages/AdminOrdersPage"
 import AdminRidersPage from "@/apps/merchant/pages/AdminRidersPage"
+import AdminRestaurantsPage from "@/apps/merchant/pages/AdminRestaurantsPage"
+import AdminRestaurantDetailsPage from "@/apps/merchant/pages/AdminRestaurantDetailsPage"
 
 
 
@@ -95,6 +97,14 @@ export const router = createBrowserRouter([
           {
             path: "riders",
             element: <AdminRidersPage />,
+          },
+          {
+            path: "restaurants",
+            element: <AdminRestaurantsPage />,
+          },
+          {
+            path: "restaurants/:id",
+            element: <AdminRestaurantDetailsPage />,
           },
         ],
       },

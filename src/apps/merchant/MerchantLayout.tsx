@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronLeft,
   LayoutDashboard,
+  Store,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -31,6 +32,7 @@ interface AdminProfile {
 // ─── Nav config ──────────────────────────────────────────────────────────────
 const NAV = [
   { path: "/admin", label: "Orders", icon: ShoppingBag, exact: true },
+  { path: "/admin/restaurants", label: "Restaurants", icon: Store, exact: false },
   { path: "/admin/riders", label: "Riders", icon: Users, exact: false },
 ]
 

@@ -1,0 +1,470 @@
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { motion, AnimatePresence } from "framer-motion"
+import { Link } from "react-router-dom"
+import { Plus, Edit2, Trash2, MapPin, Store, Upload, Loader2 } from "lucide-react"
+import axios from "@/lib/axios"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { isValidPhoneNumber } from "libphonenumber-js"
+import {
+  PhoneInput,
+  defaultCountries,
+  parseCountry,
+} from "react-international-phone"
+import "react-international-phone/style.css"
+
+const myanmarCountry = defaultCountries.find(
+  (c) => parseCountry(c).iso2 === "mm"
+)
+
+// --- Types ---
+interface Restaurant {
+  restaurantId: string
+  name: string
+  phone?: string
+  image: string
+  address: string
+  latitude: number
+  longitude: number
+}
+
+interface RestaurantFormData {
+  name: string
+  phone: string
+  image: string
+  address: string
+  latitude: number | ""
+  longitude: number | ""
+}
+
+const defaultFormData: RestaurantFormData = {
+  name: "",
+  phone: "",
+  image: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+}
+
+export default function AdminRestaurantsPage() {
+  const queryClient = useQueryClient()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null)
+  const [formData, setFormData] = useState<RestaurantFormData>(defaultFormData)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+
+  // --- Queries & Mutations ---
+  const { data: restaurants, isLoading } = useQuery<Restaurant[]>({
+    queryKey: ["admin-restaurants"],
+    queryFn: async () => {
+      const { data } = await axios.get("/restaurants")
+      return data.data
+    },
+  })
+
+  const createMutation = useMutation({
+    mutationFn: async (newRestaurant: Partial<RestaurantFormData>) => {
+      const { data } = await axios.post("/restaurants", newRestaurant)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-restaurants"] })
+      toast.success("Restaurant created successfully")
+      setIsModalOpen(false)
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to create restaurant")
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<RestaurantFormData> }) => {
+      const response = await axios.put(`/restaurants/${id}`, data)
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-restaurants"] })
+      toast.success("Restaurant updated successfully")
+      setIsModalOpen(false)
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to update restaurant")
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`/restaurants/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-restaurants"] })
+      toast.success("Restaurant deleted successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to delete restaurant")
+    },
+  })
+
+  // --- Handlers ---
+  const handleOpenModal = (restaurant?: Restaurant | any) => {
+    if (restaurant) {
+      setEditingRestaurant(restaurant)
+      setFormData({
+        name: restaurant.name || restaurant.restaurantName || "",
+        phone: restaurant.phone || restaurant.phoneNumber || restaurant.phone_number || "",
+        image: restaurant.image || restaurant.img || restaurant.photo || restaurant.imageUrl || "",
+        address: restaurant.address || restaurant.location || "",
+        latitude: restaurant.latitude !== undefined && restaurant.latitude !== null ? restaurant.latitude : (restaurant.lat ?? ""),
+        longitude: restaurant.longitude !== undefined && restaurant.longitude !== null ? restaurant.longitude : (restaurant.lng ?? restaurant.long ?? ""),
+      })
+    } else {
+      setEditingRestaurant(null)
+      setFormData(defaultFormData)
+    }
+    setIsModalOpen(true)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    let finalPhone = formData.phone
+    if (!finalPhone || finalPhone === "+95") {
+      finalPhone = ""
+    } else if (!isValidPhoneNumber(finalPhone, "MM")) {
+      toast.error("Please enter a valid Myanmar phone number.")
+      return
+    }
+
+    const payload = { ...formData, phone: finalPhone }
+
+    if (editingRestaurant) {
+      const restId = editingRestaurant.restaurantId || (editingRestaurant as any)._id || (editingRestaurant as any).id
+      updateMutation.mutate({ id: restId, data: payload })
+    } else {
+      createMutation.mutate(payload)
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this restaurant?")) {
+      deleteMutation.mutate(id)
+    }
+  }
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file")
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be less than 2MB")
+      return
+    }
+
+    const uploadFormData = new FormData()
+    uploadFormData.append("file", file)
+
+    setIsUploadingImage(true)
+    const toastId = toast.loading("Uploading image...")
+
+    try {
+      const response = await axios.post("/images/upload", uploadFormData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+
+      const uploadedUrl =
+        typeof response.data === "string"
+          ? response.data
+          : (response.data?.url ||
+             response.data?.data?.url ||
+             response.data?.img ||
+             response.data?.image ||
+             "")
+
+      if (uploadedUrl) {
+        setFormData((prev) => ({ ...prev, image: uploadedUrl }))
+        toast.success("Image uploaded successfully", { id: toastId })
+      } else {
+        toast.error("Failed to parse uploaded image URL", { id: toastId })
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      toast.error("Failed to upload image", { id: toastId })
+    } finally {
+      setIsUploadingImage(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "latitude" || name === "longitude" ? (value === "" ? "" : Number(value)) : value,
+    }))
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Restaurants</h1>
+          <p className="text-sm text-slate-500">Manage partner restaurants and their details.</p>
+        </div>
+        <Button 
+          onClick={() => handleOpenModal()} 
+          className="group h-10 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95"
+        >
+          <Plus className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" strokeWidth={2.5} />
+          Add Restaurant
+        </Button>
+      </div>
+
+      {/* Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse overflow-hidden rounded-2xl border-0 shadow-sm">
+              <div className="h-48 bg-slate-200" />
+              <CardContent className="p-5 space-y-3">
+                <div className="h-5 w-2/3 rounded bg-slate-200" />
+                <div className="h-4 w-full rounded bg-slate-100" />
+                <div className="h-4 w-1/2 rounded bg-slate-100" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <AnimatePresence>
+            {restaurants?.map((restaurant) => (
+              <motion.div
+                key={restaurant.restaurantId}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="flex h-full flex-col overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white shadow-sm transition-all hover:ring-slate-300 hover:shadow-md p-0 gap-0">
+                  {/* Image Header */}
+                  <div className="relative h-48 w-full shrink-0 bg-slate-50">
+                    <img
+                      src={restaurant.image || "https://placehold.co/600x400?text=No+Image"}
+                      alt={restaurant.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  
+                  {/* Body */}
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="mb-6 space-y-2">
+                      <h3 className="line-clamp-1 text-xl font-bold tracking-tight text-slate-900">
+                        {restaurant.name}
+                      </h3>
+                      <div className="flex items-start gap-2 text-sm text-slate-500">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                        <span className="line-clamp-2 leading-relaxed">{restaurant.address}</span>
+                      </div>
+                    </div>
+
+                    {/* Footer with Actions */}
+                    <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+                      <Link to={`/admin/restaurants/${restaurant.restaurantId || (restaurant as any)._id || (restaurant as any).id}`} className="flex-1">
+                        <Button className="w-full bg-slate-900 text-white transition-colors hover:bg-slate-800">
+                          Manage Menus
+                        </Button>
+                      </Link>
+                      
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-10 w-10 text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                          onClick={() => handleOpenModal(restaurant)}
+                          title="Edit Restaurant"
+                        >
+                          <Edit2 className="h-4.5 w-4.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-10 w-10 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                          onClick={() => handleDelete(restaurant.restaurantId || (restaurant as any)._id || (restaurant as any).id)}
+                          title="Delete Restaurant"
+                        >
+                          <Trash2 className="h-4.5 w-4.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+            {restaurants?.length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-500">
+                No restaurants found. Click "Add Restaurant" to create one.
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[520px] max-h-[85vh] overflow-y-auto p-5 bg-white border border-slate-200 rounded-2xl shadow-xl">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            
+            <DialogHeader className="pb-1 border-b border-slate-100">
+              <DialogTitle className="text-lg font-bold text-slate-900">
+                {editingRestaurant ? "Edit Restaurant" : "Add Restaurant"}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="name" className="text-xs font-semibold text-slate-700">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Riverside Cafe"
+                  className="h-9 border-slate-300 rounded-md text-sm"
+                />
+              </div>
+              
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="phone" className="text-xs font-semibold text-slate-700">Phone</Label>
+                <PhoneInput
+                  defaultCountry="mm"
+                  countries={myanmarCountry ? [myanmarCountry] : undefined}
+                  value={formData.phone}
+                  onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                  className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm transition-colors focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900"
+                  inputClassName="!border-none !bg-transparent !outline-none !ring-0 !px-1.5 !text-sm !text-slate-900 !font-medium h-full w-full"
+                  countrySelectorStyleProps={{
+                    buttonStyle: { border: "none", backgroundColor: "transparent", height: "100%" },
+                  }}
+                />
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-xs font-semibold text-slate-700">Restaurant Image</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center">
+                    {formData.image ? (
+                      <img
+                        src={formData.image}
+                        alt="Restaurant Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                        <Store className="h-5 w-5" />
+                        <span className="text-[9px] font-medium">No Image</span>
+                      </div>
+                    )}
+                    {isUploadingImage && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white backdrop-blur-[1px]">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1 flex-1">
+                    <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 transition-colors w-fit">
+                      <Upload className="h-3.5 w-3.5 text-slate-500" />
+                      <span>{formData.image ? "Change Image" : "Upload Image"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-[10px] text-slate-500">
+                      JPG, PNG, or WEBP up to 2MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="address" className="text-xs font-semibold text-slate-700">Address</Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  placeholder="123 Main St, Magway"
+                  className="h-9 border-slate-300 rounded-md text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="latitude" className="text-xs font-semibold text-slate-700">Latitude</Label>
+                <Input
+                  id="latitude"
+                  name="latitude"
+                  type="number"
+                  step="any"
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  required
+                  placeholder="20.1451"
+                  className="h-9 border-slate-300 rounded-md font-mono text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="longitude" className="text-xs font-semibold text-slate-700">Longitude</Label>
+                <Input
+                  id="longitude"
+                  name="longitude"
+                  type="number"
+                  step="any"
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  required
+                  placeholder="94.9312"
+                  className="h-9 border-slate-300 rounded-md font-mono text-sm"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <Button type="button" variant="outline" className="h-9 rounded-md text-xs font-medium px-4" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="h-9 px-5 rounded-md bg-slate-900 text-white text-xs font-medium shadow-xs hover:bg-slate-800 transition-colors disabled:opacity-50" disabled={createMutation.isPending || updateMutation.isPending || isUploadingImage}>
+                {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
