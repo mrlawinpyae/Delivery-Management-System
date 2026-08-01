@@ -1,10 +1,15 @@
-import { useState } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { Plus, Edit2, Trash2, MapPin, Store, Upload, Loader2 } from "lucide-react"
+import { Plus, Edit2, Trash2, MapPin, Store, Upload, Loader2, LocateFixed } from "lucide-react"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
+import {
+  GoogleMap,
+  useLoadScript,
+  OverlayView,
+} from "@react-google-maps/api"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,6 +22,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { isValidPhoneNumber } from "libphonenumber-js"
 import {
   PhoneInput,
@@ -28,6 +43,69 @@ import "react-international-phone/style.css"
 const myanmarCountry = defaultCountries.find(
   (c) => parseCountry(c).iso2 === "mm"
 )
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
+
+const MAGWAY_CENTER = { lat: 20.1489, lng: 94.9211 }
+
+const MAGWAY_BOUNDS = {
+  south: 20.085,
+  west: 94.885,
+  north: 20.235,
+  east: 95.04,
+}
+
+const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" }
+
+const MAP_OPTIONS: google.maps.MapOptions = {
+  restriction: {
+    latLngBounds: MAGWAY_BOUNDS,
+    strictBounds: true,
+  },
+  minZoom: 13,
+  disableDefaultUI: true,
+  zoomControl: true,
+  gestureHandling: "greedy",
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: false,
+}
+
+function isWithinMagwayBounds(lat: number, lng: number) {
+  return (
+    lat >= MAGWAY_BOUNDS.south &&
+    lat <= MAGWAY_BOUNDS.north &&
+    lng >= MAGWAY_BOUNDS.west &&
+    lng <= MAGWAY_BOUNDS.east
+  )
+}
+
+function PulsingDot() {
+  return (
+    <div style={{ position: "relative", width: 24, height: 24 }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          background: "rgba(99,102,241,0.25)",
+          animation: "ping 1.4s cubic-bezier(0,0,0.2,1) infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 4,
+          borderRadius: "50%",
+          background: "#6366f1",
+          border: "2.5px solid white",
+          boxShadow: "0 0 0 2px rgba(99,102,241,0.5)",
+        }}
+      />
+      <style>{`@keyframes ping{75%,100%{transform:scale(2);opacity:0;}}`}</style>
+    </div>
+  )
+}
 
 // --- Types ---
 interface Restaurant {
@@ -64,6 +142,22 @@ export default function AdminRestaurantsPage() {
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null)
   const [formData, setFormData] = useState<RestaurantFormData>(defaultFormData)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null)
+  
+  const mapRef = useRef<google.maps.Map | null>(null)
+  const [mapPosition, setMapPosition] = useState<{ lat: number; lng: number }>(MAGWAY_CENTER)
+  const [locating, setLocating] = useState(false)
+  const [isGeocoding, setIsGeocoding] = useState(false)
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    language: "my",
+    region: "MM",
+  })
+
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map
+  }, [])
 
   // --- Queries & Mutations ---
   const { data: restaurants, isLoading } = useQuery<Restaurant[]>({
@@ -121,19 +215,101 @@ export default function AdminRestaurantsPage() {
   const handleOpenModal = (restaurant?: Restaurant | any) => {
     if (restaurant) {
       setEditingRestaurant(restaurant)
+      const latVal = Number(restaurant.latitude ?? restaurant.lat) || MAGWAY_CENTER.lat
+      const lngVal = Number(restaurant.longitude ?? restaurant.lng ?? restaurant.long) || MAGWAY_CENTER.lng
+      
       setFormData({
         name: restaurant.name || restaurant.restaurantName || "",
         phone: restaurant.phone || restaurant.phoneNumber || restaurant.phone_number || "",
         image: restaurant.image || restaurant.img || restaurant.photo || restaurant.imageUrl || "",
         address: restaurant.address || restaurant.location || "",
-        latitude: restaurant.latitude !== undefined && restaurant.latitude !== null ? restaurant.latitude : (restaurant.lat ?? ""),
-        longitude: restaurant.longitude !== undefined && restaurant.longitude !== null ? restaurant.longitude : (restaurant.lng ?? restaurant.long ?? ""),
+        latitude: latVal,
+        longitude: lngVal,
       })
+      setMapPosition({ lat: latVal, lng: lngVal })
     } else {
       setEditingRestaurant(null)
       setFormData(defaultFormData)
+      setMapPosition(MAGWAY_CENTER)
     }
     setIsModalOpen(true)
+  }
+
+  // Reverse geocode whenever map position changes while modal is open
+  useEffect(() => {
+    if (!isModalOpen) return
+    const fetchAddress = async () => {
+      setIsGeocoding(true)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${mapPosition.lat}&lon=${mapPosition.lng}&zoom=18&addressdetails=1`
+        )
+        const data = await res.json()
+        const generatedAddress = data.display_name || "Selected Location, Magway"
+        setFormData((prev) => ({
+          ...prev,
+          address: generatedAddress,
+          latitude: mapPosition.lat,
+          longitude: mapPosition.lng,
+        }))
+      } catch (err) {
+        console.error("Reverse geocoding error:", err)
+      } finally {
+        setIsGeocoding(false)
+      }
+    }
+    fetchAddress()
+  }, [mapPosition, isModalOpen])
+
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const newLat = Number(e.latLng.lat().toFixed(6))
+      const newLng = Number(e.latLng.lng().toFixed(6))
+      setMapPosition({ lat: newLat, lng: newLng })
+      setFormData((prev) => ({
+        ...prev,
+        latitude: newLat,
+        longitude: newLng,
+      }))
+    }
+  }
+
+  const handleUseCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Location services are not available on this device.")
+      return
+    }
+
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        setLocating(false)
+
+        if (!isWithinMagwayBounds(latitude, longitude)) {
+          toast.error("Your current location is outside Magway region.")
+          return
+        }
+
+        const newPos = { lat: latitude, lng: longitude }
+        setMapPosition(newPos)
+        mapRef.current?.panTo(newPos)
+        mapRef.current?.setZoom(16)
+      },
+      (err) => {
+        setLocating(false)
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Location permission was denied.")
+        } else {
+          toast.error("Could not fetch current location.")
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    )
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -157,10 +333,12 @@ export default function AdminRestaurantsPage() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this restaurant?")) {
-      deleteMutation.mutate(id)
-    }
+  const confirmDelete = () => {
+    if (!restaurantToDelete) return
+    const restId = restaurantToDelete.restaurantId || (restaurantToDelete as any)._id || (restaurantToDelete as any).id
+    deleteMutation.mutate(restId, {
+      onSettled: () => setRestaurantToDelete(null),
+    })
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,7 +487,7 @@ export default function AdminRestaurantsPage() {
                           size="icon"
                           variant="outline"
                           className="h-10 w-10 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                          onClick={() => handleDelete(restaurant.restaurantId || (restaurant as any)._id || (restaurant as any).id)}
+                          onClick={() => setRestaurantToDelete(restaurant)}
                           title="Delete Restaurant"
                         >
                           <Trash2 className="h-4.5 w-4.5" />
@@ -411,16 +589,82 @@ export default function AdminRestaurantsPage() {
                 </div>
               </div>
 
+              {/* Location Picker Header */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>Select Location on Map</span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleUseCurrentLocation}
+                    disabled={locating}
+                    className="h-7 px-2 text-[11px] font-medium text-slate-700 gap-1 rounded-md"
+                  >
+                    {locating ? (
+                      <Loader2 size={11} className="animate-spin text-slate-500" />
+                    ) : (
+                      <LocateFixed size={11} className="text-indigo-600" />
+                    )}
+                    {locating ? "Locating..." : "Use GPS"}
+                  </Button>
+                </div>
+
+                {/* Google Map */}
+                <div className="relative h-44 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                  {!isLoaded ? (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Loader2 className="animate-spin text-slate-400" size={20} />
+                    </div>
+                  ) : (
+                    <GoogleMap
+                      mapContainerStyle={MAP_CONTAINER_STYLE}
+                      center={mapPosition}
+                      zoom={15}
+                      options={MAP_OPTIONS}
+                      onLoad={onMapLoad}
+                      onClick={handleMapClick}
+                    >
+                      <OverlayView
+                        position={mapPosition}
+                        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                        getPixelPositionOffset={(width, height) => ({
+                          x: -(width / 2),
+                          y: -(height / 2),
+                        })}
+                      >
+                        <PulsingDot />
+                      </OverlayView>
+                    </GoogleMap>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  Click anywhere on the map to place the location pin.
+                </p>
+              </div>
+
+              {/* Auto-Generated Address Field */}
               <div className="space-y-1 sm:col-span-2">
-                <Label htmlFor="address" className="text-xs font-semibold text-slate-700">Address</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="address" className="text-xs font-semibold text-slate-700">
+                    Auto-Generated Address
+                  </Label>
+                  {isGeocoding && (
+                    <span className="text-[10px] text-indigo-600 flex items-center gap-1 font-medium">
+                      <Loader2 size={10} className="animate-spin" /> Detecting address...
+                    </span>
+                  )}
+                </div>
                 <Input
                   id="address"
                   name="address"
                   value={formData.address}
-                  onChange={handleChange}
-                  required
-                  placeholder="123 Main St, Magway"
-                  className="h-9 border-slate-300 rounded-md text-sm"
+                  readOnly
+                  placeholder="Address will auto-generate from map point..."
+                  className="h-9 border-slate-200 rounded-md text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
                 />
               </div>
 
@@ -432,10 +676,9 @@ export default function AdminRestaurantsPage() {
                   type="number"
                   step="any"
                   value={formData.latitude}
-                  onChange={handleChange}
-                  required
+                  readOnly
                   placeholder="20.1451"
-                  className="h-9 border-slate-300 rounded-md font-mono text-sm"
+                  className="h-9 border-slate-200 rounded-md font-mono text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
                 />
               </div>
               <div className="space-y-1">
@@ -446,10 +689,9 @@ export default function AdminRestaurantsPage() {
                   type="number"
                   step="any"
                   value={formData.longitude}
-                  onChange={handleChange}
-                  required
+                  readOnly
                   placeholder="94.9312"
-                  className="h-9 border-slate-300 rounded-md font-mono text-sm"
+                  className="h-9 border-slate-200 rounded-md font-mono text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -465,6 +707,35 @@ export default function AdminRestaurantsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modern Delete Confirmation Alert Dialog */}
+      <AlertDialog open={!!restaurantToDelete} onOpenChange={(open) => !open && setRestaurantToDelete(null)}>
+        <AlertDialogContent className="sm:max-w-[400px] p-6 bg-white rounded-2xl border border-slate-200 shadow-2xl">
+          <AlertDialogHeader className="space-y-3 text-center sm:text-left">
+            <div className="mx-auto sm:mx-0 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-lg font-bold text-slate-900">
+              Delete Restaurant?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-slate-500 leading-relaxed">
+              Are you sure you want to delete <span className="font-semibold text-slate-900">"{restaurantToDelete?.name}"</span>? This action cannot be undone and will remove all associated menus and data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex gap-2 sm:gap-3">
+            <AlertDialogCancel className="h-10 rounded-xl font-medium text-slate-700 border-slate-200 hover:bg-slate-50">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="h-10 rounded-xl bg-rose-600 font-medium text-white hover:bg-rose-700 shadow-sm transition-all"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Restaurant"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
