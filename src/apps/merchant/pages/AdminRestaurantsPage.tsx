@@ -405,14 +405,21 @@ export default function AdminRestaurantsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Restaurants</h1>
-          <p className="text-sm text-slate-500">Manage partner restaurants and their details.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Restaurants
+          </h1>
+          <p className="text-sm text-slate-500">
+            Manage partner restaurants and their details.
+          </p>
         </div>
-        <Button 
-          onClick={() => handleOpenModal()} 
-          className="group h-10 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95"
+        <Button
+          onClick={() => handleOpenModal()}
+          className="group h-10 cursor-pointer rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95"
         >
-          <Plus className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" strokeWidth={2.5} />
+          <Plus
+            className="mr-2 h-4 w-4 transition-transform group-hover:scale-110"
+            strokeWidth={2.5}
+          />
           Add Restaurant
         </Button>
       </div>
@@ -421,9 +428,12 @@ export default function AdminRestaurantsPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse overflow-hidden rounded-2xl border-0 shadow-sm">
+            <Card
+              key={i}
+              className="animate-pulse overflow-hidden rounded-2xl border-0 shadow-sm"
+            >
               <div className="h-48 bg-slate-200" />
-              <CardContent className="p-5 space-y-3">
+              <CardContent className="space-y-3 p-5">
                 <div className="h-5 w-2/3 rounded bg-slate-200" />
                 <div className="h-4 w-full rounded bg-slate-100" />
                 <div className="h-4 w-1/2 rounded bg-slate-100" />
@@ -443,16 +453,19 @@ export default function AdminRestaurantsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="flex h-full flex-col overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white shadow-sm transition-all hover:ring-slate-300 hover:shadow-md p-0 gap-0">
+                <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-2xl bg-white p-0 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md hover:ring-slate-300">
                   {/* Image Header */}
                   <div className="relative h-48 w-full shrink-0 bg-slate-50">
                     <img
-                      src={restaurant.image || "https://placehold.co/600x400?text=No+Image"}
+                      src={
+                        restaurant.image ||
+                        "https://placehold.co/600x400?text=No+Image"
+                      }
                       alt={restaurant.name}
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  
+
                   {/* Body */}
                   <div className="flex flex-1 flex-col p-5">
                     <div className="mb-6 space-y-2">
@@ -461,23 +474,28 @@ export default function AdminRestaurantsPage() {
                       </h3>
                       <div className="flex items-start gap-2 text-sm text-slate-500">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <span className="line-clamp-2 leading-relaxed">{restaurant.address}</span>
+                        <span className="line-clamp-2 leading-relaxed">
+                          {restaurant.address}
+                        </span>
                       </div>
                     </div>
 
                     {/* Footer with Actions */}
                     <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-                      <Link to={`/admin/restaurants/${restaurant.restaurantId || (restaurant as any)._id || (restaurant as any).id}`} className="flex-1">
-                        <Button className="w-full bg-slate-900 text-white transition-colors hover:bg-slate-800">
+                      <Link
+                        to={`/admin/restaurants/${restaurant.restaurantId || (restaurant as any)._id || (restaurant as any).id}`}
+                        className="flex-1"
+                      >
+                        <Button className="w-full cursor-pointer bg-slate-900 text-white transition-colors hover:bg-slate-800">
                           Manage Menus
                         </Button>
                       </Link>
-                      
+
                       <div className="flex shrink-0 items-center gap-1.5">
                         <Button
                           size="icon"
                           variant="outline"
-                          className="h-10 w-10 text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                          className="h-10 w-10 text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer"
                           onClick={() => handleOpenModal(restaurant)}
                           title="Edit Restaurant"
                         >
@@ -486,7 +504,7 @@ export default function AdminRestaurantsPage() {
                         <Button
                           size="icon"
                           variant="outline"
-                          className="h-10 w-10 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                          className="h-10 w-10 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
                           onClick={() => setRestaurantToDelete(restaurant)}
                           title="Delete Restaurant"
                         >
@@ -509,18 +527,22 @@ export default function AdminRestaurantsPage() {
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[520px] max-h-[85vh] overflow-y-auto p-5 bg-white border border-slate-200 rounded-2xl shadow-xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:max-w-[520px]">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            
-            <DialogHeader className="pb-1 border-b border-slate-100">
+            <DialogHeader className="border-b border-slate-100 pb-1">
               <DialogTitle className="text-lg font-bold text-slate-900">
                 {editingRestaurant ? "Edit Restaurant" : "Add Restaurant"}
               </DialogTitle>
             </DialogHeader>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+
+            <div className="grid grid-cols-1 gap-3.5 pt-1 sm:grid-cols-2">
               <div className="space-y-1 sm:col-span-2">
-                <Label htmlFor="name" className="text-xs font-semibold text-slate-700">Name</Label>
+                <Label
+                  htmlFor="name"
+                  className="text-xs font-semibold text-slate-700"
+                >
+                  Name
+                </Label>
                 <Input
                   id="name"
                   name="name"
@@ -528,29 +550,42 @@ export default function AdminRestaurantsPage() {
                   onChange={handleChange}
                   required
                   placeholder="Riverside Cafe"
-                  className="h-9 border-slate-300 rounded-md text-sm"
+                  className="h-9 rounded-md border-slate-300 text-sm"
                 />
               </div>
-              
+
               <div className="space-y-1 sm:col-span-2">
-                <Label htmlFor="phone" className="text-xs font-semibold text-slate-700">Phone</Label>
+                <Label
+                  htmlFor="phone"
+                  className="text-xs font-semibold text-slate-700"
+                >
+                  Phone
+                </Label>
                 <PhoneInput
                   defaultCountry="mm"
                   countries={myanmarCountry ? [myanmarCountry] : undefined}
                   value={formData.phone}
-                  onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                  onChange={(value) =>
+                    setFormData((prev) => ({ ...prev, phone: value }))
+                  }
                   className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 text-sm transition-colors focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900"
                   inputClassName="!border-none !bg-transparent !outline-none !ring-0 !px-1.5 !text-sm !text-slate-900 !font-medium h-full w-full"
                   countrySelectorStyleProps={{
-                    buttonStyle: { border: "none", backgroundColor: "transparent", height: "100%" },
+                    buttonStyle: {
+                      border: "none",
+                      backgroundColor: "transparent",
+                      height: "100%",
+                    },
                   }}
                 />
               </div>
 
               <div className="space-y-1 sm:col-span-2">
-                <Label className="text-xs font-semibold text-slate-700">Restaurant Image</Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  Restaurant Image
+                </Label>
                 <div className="flex items-center gap-3">
-                  <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50 flex items-center justify-center">
+                  <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                     {formData.image ? (
                       <img
                         src={formData.image}
@@ -570,10 +605,12 @@ export default function AdminRestaurantsPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-1 flex-1">
-                    <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-50 transition-colors w-fit">
+                  <div className="flex flex-1 flex-col gap-1">
+                    <label className="inline-flex w-fit cursor-pointer items-center justify-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50">
                       <Upload className="h-3.5 w-3.5 text-slate-500" />
-                      <span>{formData.image ? "Change Image" : "Upload Image"}</span>
+                      <span>
+                        {formData.image ? "Change Image" : "Upload Image"}
+                      </span>
                       <input
                         type="file"
                         accept="image/*"
@@ -592,7 +629,7 @@ export default function AdminRestaurantsPage() {
               {/* Location Picker Header */}
               <div className="space-y-1.5 sm:col-span-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                     <MapPin className="h-3.5 w-3.5 text-indigo-600" />
                     <span>Select Location on Map</span>
                   </Label>
@@ -602,10 +639,13 @@ export default function AdminRestaurantsPage() {
                     size="sm"
                     onClick={handleUseCurrentLocation}
                     disabled={locating}
-                    className="h-7 px-2 text-[11px] font-medium text-slate-700 gap-1 rounded-md"
+                    className="h-7 gap-1 rounded-md px-2 text-[11px] font-medium text-slate-700"
                   >
                     {locating ? (
-                      <Loader2 size={11} className="animate-spin text-slate-500" />
+                      <Loader2
+                        size={11}
+                        className="animate-spin text-slate-500"
+                      />
                     ) : (
                       <LocateFixed size={11} className="text-indigo-600" />
                     )}
@@ -617,7 +657,10 @@ export default function AdminRestaurantsPage() {
                 <div className="relative h-44 w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                   {!isLoaded ? (
                     <div className="flex h-full w-full items-center justify-center">
-                      <Loader2 className="animate-spin text-slate-400" size={20} />
+                      <Loader2
+                        className="animate-spin text-slate-400"
+                        size={20}
+                      />
                     </div>
                   ) : (
                     <GoogleMap
@@ -649,12 +692,16 @@ export default function AdminRestaurantsPage() {
               {/* Auto-Generated Address Field */}
               <div className="space-y-1 sm:col-span-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="address" className="text-xs font-semibold text-slate-700">
+                  <Label
+                    htmlFor="address"
+                    className="text-xs font-semibold text-slate-700"
+                  >
                     Auto-Generated Address
                   </Label>
                   {isGeocoding && (
-                    <span className="text-[10px] text-indigo-600 flex items-center gap-1 font-medium">
-                      <Loader2 size={10} className="animate-spin" /> Detecting address...
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-indigo-600">
+                      <Loader2 size={10} className="animate-spin" /> Detecting
+                      address...
                     </span>
                   )}
                 </div>
@@ -664,12 +711,17 @@ export default function AdminRestaurantsPage() {
                   value={formData.address}
                   readOnly
                   placeholder="Address will auto-generate from map point..."
-                  className="h-9 border-slate-200 rounded-md text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
+                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 text-sm text-slate-600"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="latitude" className="text-xs font-semibold text-slate-700">Latitude</Label>
+                <Label
+                  htmlFor="latitude"
+                  className="text-xs font-semibold text-slate-700"
+                >
+                  Latitude
+                </Label>
                 <Input
                   id="latitude"
                   name="latitude"
@@ -678,11 +730,16 @@ export default function AdminRestaurantsPage() {
                   value={formData.latitude}
                   readOnly
                   placeholder="20.1451"
-                  className="h-9 border-slate-200 rounded-md font-mono text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
+                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 font-mono text-sm text-slate-600"
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="longitude" className="text-xs font-semibold text-slate-700">Longitude</Label>
+                <Label
+                  htmlFor="longitude"
+                  className="text-xs font-semibold text-slate-700"
+                >
+                  Longitude
+                </Label>
                 <Input
                   id="longitude"
                   name="longitude"
@@ -691,17 +748,32 @@ export default function AdminRestaurantsPage() {
                   value={formData.longitude}
                   readOnly
                   placeholder="94.9312"
-                  className="h-9 border-slate-200 rounded-md font-mono text-sm bg-slate-50 text-slate-600 cursor-not-allowed"
+                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 font-mono text-sm text-slate-600"
                 />
               </div>
             </div>
-            
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <Button type="button" variant="outline" className="h-9 rounded-md text-xs font-medium px-4" onClick={() => setIsModalOpen(false)}>
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 rounded-md px-4 text-xs font-medium"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="h-9 px-5 rounded-md bg-slate-900 text-white text-xs font-medium shadow-xs hover:bg-slate-800 transition-colors disabled:opacity-50" disabled={createMutation.isPending || updateMutation.isPending || isUploadingImage}>
-                {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save"}
+              <Button
+                type="submit"
+                className="h-9 rounded-md bg-slate-900 px-5 text-xs font-medium text-white shadow-xs transition-colors hover:bg-slate-800 disabled:opacity-50"
+                disabled={
+                  createMutation.isPending ||
+                  updateMutation.isPending ||
+                  isUploadingImage
+                }
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? "Saving..."
+                  : "Save"}
               </Button>
             </div>
           </form>
@@ -709,26 +781,34 @@ export default function AdminRestaurantsPage() {
       </Dialog>
 
       {/* Modern Delete Confirmation Alert Dialog */}
-      <AlertDialog open={!!restaurantToDelete} onOpenChange={(open) => !open && setRestaurantToDelete(null)}>
-        <AlertDialogContent className="sm:max-w-[400px] p-6 bg-white rounded-2xl border border-slate-200 shadow-2xl">
+      <AlertDialog
+        open={!!restaurantToDelete}
+        onOpenChange={(open) => !open && setRestaurantToDelete(null)}
+      >
+        <AlertDialogContent className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl sm:max-w-[400px]">
           <AlertDialogHeader className="space-y-3 text-center sm:text-left">
-            <div className="mx-auto sm:mx-0 flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600 sm:mx-0">
               <Trash2 className="h-6 w-6" />
             </div>
             <AlertDialogTitle className="text-lg font-bold text-slate-900">
               Delete Restaurant?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-slate-500 leading-relaxed">
-              Are you sure you want to delete <span className="font-semibold text-slate-900">"{restaurantToDelete?.name}"</span>? This action cannot be undone and will remove all associated menus and data.
+            <AlertDialogDescription className="text-sm leading-relaxed text-slate-500">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-900">
+                "{restaurantToDelete?.name}"
+              </span>
+              ? This action cannot be undone and will remove all associated
+              menus and data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 flex gap-2 sm:gap-3">
-            <AlertDialogCancel className="h-10 rounded-xl font-medium text-slate-700 border-slate-200 hover:bg-slate-50">
+            <AlertDialogCancel className="h-10 rounded-xl border-slate-200 font-medium text-slate-700 hover:bg-slate-50">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="h-10 rounded-xl bg-rose-600 font-medium text-white hover:bg-rose-700 shadow-sm transition-all"
+              className="h-10 rounded-xl bg-rose-600 font-medium text-white shadow-sm transition-all hover:bg-rose-700"
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? "Deleting..." : "Delete Restaurant"}
