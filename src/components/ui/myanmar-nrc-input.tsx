@@ -1,17 +1,29 @@
 import * as React from "react"
-import { getDistricts, validateNricFormat } from "mm-nric"
+import { getDistricts, getDistrictsByState, validateNricFormat } from "mm-nric"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Types & Constants ───────────────────────────────────────────────────────
+
+export interface DistrictItem {
+  en: string
+  mm?: string
+  fullEn?: string
+  fullMm?: string
+  code?: number
+}
 
 const STATE_CODES = Array.from({ length: 14 }, (_, i) => String(i + 1))
-const NRC_TYPES = ["(N)", "(E)", "(P)"]
+const NRC_TYPES = [
+  { value: "(N)", label: "(N) (နိုင်)" },
+  { value: "(E)", label: "(E) (ဧ)" },
+  { value: "(P)", label: "(P) (ပြု)" },
+]
 
-// Flatten ALL townships for free selection (no cascading)
-const ALL_TOWNSHIPS: string[] = (getDistricts() as { en: string }[])
-  .map((d) => d.en)
-  .filter(Boolean)
+// Fallback: Flatten ALL townships for selection when no state is selected
+const ALL_TOWNSHIPS: DistrictItem[] = (getDistricts() as DistrictItem[]).filter(
+  (d) => Boolean(d.en)
+)
 
 // ─── parseNrcString ───────────────────────────────────────────────────────────
 
@@ -55,6 +67,13 @@ export function MyanmarNrcInput({
   const [nrcType, setNrcType] = React.useState("")
   const [nrcNumber, setNrcNumber] = React.useState("")
 
+  // Filter townships according to the currently selected state
+  const availableTownships = React.useMemo<DistrictItem[]>(() => {
+    if (!stateCode) return ALL_TOWNSHIPS
+    const districts = getDistrictsByState(Number(stateCode)) as DistrictItem[]
+    return districts && districts.length > 0 ? districts : ALL_TOWNSHIPS
+  }, [stateCode])
+
   // Sync from external `value` (e.g. edit-mode pre-fill)
   React.useEffect(() => {
     if (!value) return
@@ -83,7 +102,18 @@ export function MyanmarNrcInput({
   const handleState = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
     setStateCode(val)
-    triggerChange(val, townshipCode, nrcType, nrcNumber)
+
+    const availableCodes = val
+      ? ((getDistrictsByState(Number(val)) as DistrictItem[]) || []).map((d) => d.en)
+      : ALL_TOWNSHIPS.map((d) => d.en)
+
+    let nextTownship = townshipCode
+    if (townshipCode && !availableCodes.includes(townshipCode)) {
+      nextTownship = ""
+      setTownshipCode("")
+    }
+
+    triggerChange(val, nextTownship, nrcType, nrcNumber)
   }
 
   const handleTownship = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -156,9 +186,9 @@ export function MyanmarNrcInput({
           <option value="" disabled className="text-slate-400">
             Township
           </option>
-          {ALL_TOWNSHIPS.map((en) => (
-            <option key={en} value={en} className="text-slate-900">
-              {en}
+          {availableTownships.map((d) => (
+            <option key={d.en} value={d.en} className="text-slate-900">
+              {d.en}{d.mm ? ` (${d.mm})` : ""}
             </option>
           ))}
         </select>
@@ -181,8 +211,8 @@ export function MyanmarNrcInput({
             Type
           </option>
           {NRC_TYPES.map((t) => (
-            <option key={t} value={t} className="text-slate-900">
-              {t}
+            <option key={t.value} value={t.value} className="text-slate-900">
+              {t.label}
             </option>
           ))}
         </select>

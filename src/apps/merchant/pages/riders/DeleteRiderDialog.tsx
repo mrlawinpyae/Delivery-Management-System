@@ -28,7 +28,7 @@ export function DeleteRiderDialog({ open, onOpenChange, rider, onDeleted }: Prop
     if (!rider) return
     setLoading(true)
     try {
-      await axios.delete(`/riders/${rider.riderId}`)
+      await axios.delete(`/rider/${rider.riderId}`)
       toast.success("Rider removed successfully")
       onDeleted(rider.riderId)
       onOpenChange(false)

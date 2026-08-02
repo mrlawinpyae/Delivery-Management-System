@@ -84,6 +84,7 @@ export interface CreateRiderPayload {
   password: string
   vehicleType: string
   licenceNumber: string
+  nrcNumber: string
 }
 
 export interface UpdateRiderPayload {

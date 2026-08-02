@@ -16,6 +16,7 @@ export const VEHICLE_OPTIONS = ["Scooter", "Motorcycle", "Car", "Bicycle", "Van"
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 import { isValidPhoneNumber } from "libphonenumber-js"
+import { validateNricFormat } from "mm-nric"
 
 export const createRiderSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -35,6 +36,12 @@ export const createRiderSchema = z.object({
     .regex(/[^a-zA-Z0-9]/, "Must contain at least one special character"),
   vehicleType: z.string().min(1, "Vehicle type is required"),
   licenceNumber: z.string().min(3, "Licence number is required"),
+  nrcNumber: z
+    .string()
+    .min(1, "NRC Number is required for identity verification")
+    .refine((val) => validateNricFormat(val) !== false, {
+      message: "Please enter a valid Myanmar NRC number",
+    }),
   image: z.string().optional(),
 })
 

@@ -12,6 +12,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
 import type { RiderSummary, UpdateVehiclePayload } from "@/types"
@@ -30,6 +37,8 @@ export function EditVehicleDialog({ open, onOpenChange, rider }: Props) {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<UpdateVehicleForm>({ resolver: zodResolver(updateVehicleSchema) })
 
@@ -62,15 +71,25 @@ export function EditVehicleDialog({ open, onOpenChange, rider }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormField label="Vehicle Type" error={errors.type?.message}>
-            <select
-              {...register("type")}
-              className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+            <Select
+              value={watch("type") || ""}
+              onValueChange={(val) => setValue("type", val, { shouldValidate: true })}
             >
-              <option value="">Select…</option>
-              {VEHICLE_OPTIONS.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
+              <SelectTrigger className="h-9 w-full rounded-md border-slate-300 bg-white text-sm text-slate-900 data-[placeholder]:text-slate-400">
+                <SelectValue placeholder="Select…" />
+              </SelectTrigger>
+              <SelectContent className="z-50 border-slate-200 bg-white text-slate-900 shadow-md">
+                {VEHICLE_OPTIONS.map((v) => (
+                  <SelectItem
+                    key={v}
+                    value={v}
+                    className="cursor-pointer text-slate-900 focus:bg-slate-100 focus:text-slate-900"
+                  >
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </FormField>
           <FormField label="Licence Number" error={errors.licenceNumber?.message}>
             <Input {...register("licenceNumber")} placeholder="YGN-7777" className="bg-white text-slate-900 border-slate-300" />

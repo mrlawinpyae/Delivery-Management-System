@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useForm, type FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion, AnimatePresence } from "framer-motion"
-import { UserPlus, Pencil, Loader2, Camera, User } from "lucide-react"
+import { UserPlus, Pencil, Loader2, Camera, User, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,6 +13,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
 import type { RiderSummary, CreateRiderPayload } from "@/types"
@@ -31,6 +38,7 @@ import {
 } from "react-international-phone"
 import "react-international-phone/style.css"
 import { MyanmarNrcInput } from "@/components/ui/myanmar-nrc-input"
+
 
 const myanmarCountry = defaultCountries.find(
   (c) => parseCountry(c).iso2 === "mm"
@@ -60,6 +68,7 @@ export function RiderFormDialog({
   const [nrcNumber, setNrcNumber] = useState("")
   const [avatarPreview, setAvatarPreview] = useState<string>("")
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // React Hook Form setup with conditional Zod resolver
   const {
@@ -67,15 +76,17 @@ export function RiderFormDialog({
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { isSubmitting },
   } = useForm<CombinedRiderForm>({
     resolver: zodResolver(isEdit ? updateRiderSchema : createRiderSchema),
     mode: "onChange",
   })
 
-  // Register phone field
+  // Register phone & nrcNumber fields
   useEffect(() => {
     register("phone")
+    register("nrcNumber")
   }, [register])
 
   // Sync mode when initialIsEdit or open changes
@@ -158,6 +169,7 @@ export function RiderFormDialog({
       setNrcNumber("")
       setAvatarPreview("")
       setIsUploadingImage(false)
+      setShowPassword(false)
       setIsEdit(initialIsEdit)
     }
     onOpenChange(v)
@@ -189,8 +201,11 @@ export function RiderFormDialog({
       }
     } else {
       try {
-        const payload = data as CreateRiderPayload
-        const res = await axios.post("/rider/save-rider", payload)
+        const payload: CreateRiderPayload = {
+          ...(data as CreateRiderPayload),
+          nrcNumber: data.nrcNumber || nrcNumber,
+        }
+        const res = await axios.post("/rider", payload)
         const created = res.data?.data
         toast.success("Rider created successfully!")
         onCreated?.({
@@ -334,12 +349,26 @@ export function RiderFormDialog({
 
               {/* Password field */}
               <FormField label={isEdit ? "New Password" : "Password"}>
-                <Input
-                  {...register("password")}
-                  type="password"
-                  placeholder={isEdit ? "*********" : "••••••••"}
-                  className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500"
-                />
+                <div className="relative">
+                  <Input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder={isEdit ? "*********" : "••••••••"}
+                    className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
+                  </button>
+                </div>
               </FormField>
 
                 {/* Myanmar NRC Number */}
@@ -349,7 +378,7 @@ export function RiderFormDialog({
                     disabled={isEdit}
                     onChange={(val) => {
                       setNrcNumber(val)
-                      setValue("nrcNumber", val, { shouldValidate: false })
+                      setValue("nrcNumber", val, { shouldValidate: true })
                     }}
                   />
                 </FormField>
@@ -357,17 +386,25 @@ export function RiderFormDialog({
               {/* Grid 2: Vehicle Type & Licence Number */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="Vehicle Type">
-                  <select
-                    {...register("vehicleType")}
-                    className="flex h-9 w-full rounded-md border border-slate-300 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+                  <Select
+                    value={watch("vehicleType") || ""}
+                    onValueChange={(val) => setValue("vehicleType", val, { shouldValidate: true })}
                   >
-                    <option value="">Select…</option>
-                    {VEHICLE_OPTIONS.map((v) => (
-                      <option key={v} value={v}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-9 w-full rounded-md border-slate-300 bg-white text-sm text-slate-900 data-[placeholder]:text-slate-400">
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 border-slate-200 bg-white text-slate-900 shadow-md">
+                      {VEHICLE_OPTIONS.map((v) => (
+                        <SelectItem
+                          key={v}
+                          value={v}
+                          className="cursor-pointer text-slate-900 focus:bg-slate-100 focus:text-slate-900"
+                        >
+                          {v}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormField>
                 <FormField label="Licence Number">
                   <Input
@@ -377,8 +414,6 @@ export function RiderFormDialog({
                   />
                 </FormField>
               </div>
-
-              {/* Buttons */}
               </div>
               <DialogFooter className="px-6 py-4 shrink-0 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-2">
                 <Button
@@ -411,8 +446,6 @@ export function RiderFormDialog({
                 </Button>
               </DialogFooter>
             </form>
-
-       
           </motion.div>
         </AnimatePresence>
       </DialogContent>
