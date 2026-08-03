@@ -1,7 +1,11 @@
 import { Outlet, Link, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Map, ClipboardList, User, Radio, Sun, Moon } from "lucide-react"
+import {  ClipboardList, User, Sun, Moon } from "lucide-react"
 import { useThemeStore } from "@/store/useThemeStore"
+
+// ─── NEW IMPORTS FOR AUTH & GPS TRACKING ─────────────────────────────────────
+import { useAuthStore } from "@/store/useAuthStore" 
+import { useRiderLocation } from "./hooks/useRiderLocation"
 
 // ─── Theme token maps ────────────────────────────────────────────────────────
 // Every colour decision lives here; the JSX just reads from these objects.
@@ -129,6 +133,10 @@ export default function RiderLayout() {
   const tk = tokens[theme]
   const isDark = theme === "dark"
 
+  // ─── NEW: INIT AUTH & BACKGROUND GPS TRACKING ────────────────────────────────
+  const { user } = useAuthStore() // Grab the logged-in user details
+  useRiderLocation(user?.userId) // Start the WebSocket 5-second interval loop
+
   const navItems = [
     { path: "/rider", label: "Tasks", icon: ClipboardList },
     // { path: "/rider/map", label: "Map", icon: Map },
@@ -159,7 +167,9 @@ export default function RiderLayout() {
           to="/rider"
           className="group mb-8 flex flex-col items-center gap-1"
         >
-          <div className={`flex h-11 w-11 items-center justify-center rounded-xl font-serif text-xl font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}>
+          <div
+            className={`flex h-11 w-11 items-center justify-center rounded-xl font-serif text-xl font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}
+          >
             D
           </div>
         </Link>
@@ -274,15 +284,21 @@ export default function RiderLayout() {
           }}
         >
           <Link to="/rider" className="group flex items-center gap-2.5">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg font-serif text-base font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}>
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-lg font-serif text-base font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}
+            >
               D
             </div>
             <div className="flex flex-col justify-center">
-              <span className={`font-serif text-lg font-semibold tracking-tight ${isDark ? "text-white" : "text-zinc-900"} leading-none`}>
+              <span
+                className={`font-serif text-lg font-semibold tracking-tight ${isDark ? "text-white" : "text-zinc-900"} leading-none`}
+              >
                 deliv
                 <span className="font-sans font-light text-zinc-400">x</span>
               </span>
-              <p className={`text-[9px] font-semibold tracking-widest uppercase ${tk.logoSub} mt-1 leading-none`}>
+              <p
+                className={`text-[9px] font-semibold tracking-widest uppercase ${tk.logoSub} mt-1 leading-none`}
+              >
                 Rider
               </p>
             </div>
