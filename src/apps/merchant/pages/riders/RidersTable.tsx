@@ -99,10 +99,18 @@ export function RidersTable({ riders, loading, onOpenModal }: Props) {
                     {/* Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200/80">
-                          <span className="text-xs font-bold text-indigo-700">
-                            {rider.name.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 border border-indigo-200/80 shadow-xs">
+                          {rider.image && rider.image.trim() !== "" ? (
+                            <img
+                              src={rider.image}
+                              alt={rider.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-indigo-700">
+                              {rider.name ? rider.name.charAt(0).toUpperCase() : "R"}
+                            </span>
+                          )}
                         </div>
                         <span className="font-bold text-slate-900">{rider.name}</span>
                       </div>

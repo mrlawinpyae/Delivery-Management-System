@@ -99,21 +99,70 @@ export function RiderFormDialog({
   // Prefill form values when in edit mode or when rider changes
   useEffect(() => {
     if (open && isEdit && rider) {
-      const initialPhone = rider.phone || ""
-      setPhone(initialPhone)
-      setAvatarPreview((rider.image || ""))
-      reset({
-        name: rider.name,
-        phone: initialPhone,
-        email: "",
-        password: "",
-        vehicleType: "",
-        licenceNumber: "",
-        nrcNumber: "",
-        image: (rider.image || ""),
-      })
+      let isSubscribed = true
+
+      const applyRiderData = (r: RiderSummary | any) => {
+        const initialPhone = r.phone || ""
+        const initialNrc = r.nrcNumber || r.nrc || ""
+        const initialEmail = r.email || ""
+        const rawVehicle = r.vehicleType || r.vehicle?.type || r.type || ""
+        const initialVehicle =
+          VEHICLE_OPTIONS.find(
+            (opt) => opt.toLowerCase() === rawVehicle.toLowerCase()
+          ) || rawVehicle
+        const initialLicence =
+          r.licenceNumber ||
+          r.licenseNumber ||
+          r.vehicle?.licenceNumber ||
+          r.vehicle?.licenseNumber ||
+          ""
+        const initialImage = r.image || ""
+
+        setPhone(initialPhone)
+        setNrcNumber(initialNrc)
+        setAvatarPreview(initialImage)
+        reset({
+          name: r.name || "",
+          phone: initialPhone,
+          email: initialEmail,
+          password: "",
+          vehicleType: initialVehicle,
+          licenceNumber: initialLicence,
+          nrcNumber: initialNrc,
+          image: initialImage,
+        })
+        setValue("vehicleType", initialVehicle, { shouldValidate: true })
+        setValue("licenceNumber", initialLicence, { shouldValidate: true })
+        setValue("phone", initialPhone, { shouldValidate: true })
+        setValue("nrcNumber", initialNrc, { shouldValidate: true })
+        setValue("email", initialEmail, { shouldValidate: true })
+        if (initialImage) {
+          setValue("image", initialImage, { shouldValidate: true })
+        }
+      }
+
+      applyRiderData(rider)
+
+      if (rider.riderId) {
+        axios
+          .get(`/rider/${rider.riderId}`)
+          .then((res) => {
+            if (isSubscribed && res.data) {
+              const fetchedData = res.data.data || res.data
+              const fullRider = { ...rider, ...fetchedData }
+              applyRiderData(fullRider)
+            }
+          })
+          .catch(() => {
+            // Silently fallback to rider prop
+          })
+      }
+
+      return () => {
+        isSubscribed = false
+      }
     }
-  }, [open, isEdit, rider, reset])
+  }, [open, isEdit, rider, reset, setValue])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -194,7 +243,15 @@ export function RiderFormDialog({
           ...(data.image ? { image: data.image } : {}),
         })
         toast.success("Rider info updated!")
-        onUpdated?.(rider.riderId, { name: data.name, phone: data.phone || rider.phone })
+        onUpdated?.(rider.riderId, {
+          name: data.name,
+          phone: data.phone || rider.phone,
+          email: data.email || rider.email,
+          vehicleType: data.vehicleType || rider.vehicleType,
+          licenceNumber: data.licenceNumber || rider.licenceNumber,
+          nrcNumber: data.nrcNumber || rider.nrcNumber,
+          image: data.image || rider.image,
+        })
         handleClose(false)
       } catch (err: any) {
         toast.error(err.response?.data?.error || "Failed to update rider")

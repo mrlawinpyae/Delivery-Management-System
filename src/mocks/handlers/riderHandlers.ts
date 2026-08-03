@@ -455,4 +455,160 @@ export const riderHandlers = [
       error: null,
     })
   }),
+
+  // Get All Riders
+  http.get("/rider", async () => {
+    seedMockRiders()
+    await delay(300)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    return HttpResponse.json({
+      message: "Riders fetched successfully",
+      data: riders,
+      error: null,
+    })
+  }),
+  http.get("/api/rider", async () => {
+    seedMockRiders()
+    await delay(300)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    return HttpResponse.json({
+      message: "Riders fetched successfully",
+      data: riders,
+      error: null,
+    })
+  }),
+
+  // Create Rider
+  http.post("/rider", async ({ request }) => {
+    seedMockRiders()
+    const body = (await request.json()) as any
+    await delay(500)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    const newRider = {
+      riderId: "rider_" + Date.now(),
+      name: body.name || "New Rider",
+      phone: body.phone || "",
+      status: "AVAILABLE",
+      email: body.email || "",
+      vehicleType: body.vehicleType || "",
+      licenceNumber: body.licenceNumber || "",
+      nrcNumber: body.nrcNumber || "",
+      image: body.image || "",
+    }
+    riders.unshift(newRider)
+    localStorage.setItem("mock_riders", JSON.stringify(riders))
+    return HttpResponse.json({
+      message: "Rider created successfully",
+      data: newRider,
+      error: null,
+    })
+  }),
+
+  // Update Rider
+  http.put("/rider/:riderId", async ({ params, request }) => {
+    seedMockRiders()
+    const { riderId } = params as { riderId: string }
+    const body = (await request.json()) as any
+    await delay(500)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    let updatedRider: any = null
+    const updatedRiders = riders.map((r: any) => {
+      if (r.riderId === riderId) {
+        updatedRider = { ...r, ...body }
+        return updatedRider
+      }
+      return r
+    })
+    localStorage.setItem("mock_riders", JSON.stringify(updatedRiders))
+    return HttpResponse.json({
+      message: "Rider updated successfully",
+      data: updatedRider,
+      error: null,
+    })
+  }),
+
+  // Get Single Rider Details
+  http.get("/rider/:riderId", async ({ params }) => {
+    seedMockRiders()
+    const { riderId } = params as { riderId: string }
+    await delay(200)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    const found = riders.find((r: any) => r.riderId === riderId) || riders[0]
+    return HttpResponse.json({
+      message: "Rider details fetched successfully",
+      data: found,
+      error: null,
+    })
+  }),
+  http.get("/api/rider/:riderId", async ({ params }) => {
+    seedMockRiders()
+    const { riderId } = params as { riderId: string }
+    await delay(200)
+    const riders = JSON.parse(localStorage.getItem("mock_riders") || "[]")
+    const found = riders.find((r: any) => r.riderId === riderId) || riders[0]
+    return HttpResponse.json({
+      message: "Rider details fetched successfully",
+      data: found,
+      error: null,
+    })
+  }),
+
+  // Image Upload
+  http.post("/images/upload", async () => {
+    await delay(600)
+    return HttpResponse.json({
+      url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80",
+    })
+  }),
 ]
+
+function seedMockRiders() {
+  const initialRiders = [
+    {
+      riderId: "r_101",
+      name: "Aung Aung",
+      phone: "+9509987654321",
+      status: "AVAILABLE",
+      email: "aungaung@gmail.com",
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80",
+      vehicleType: "Motorcycle",
+      licenceNumber: "MDY-1234",
+      nrcNumber: "9/MAMANA(N)012345",
+    },
+    {
+      riderId: "r_102",
+      name: "Kyaw Kyaw",
+      phone: "+9509123456789",
+      status: "BUSY",
+      email: "kyawkyaw@gmail.com",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
+      vehicleType: "Scooter",
+      licenceNumber: "YGN-5678",
+      nrcNumber: "12/DAGANA(N)054321",
+    },
+  ]
+
+  const existing = localStorage.getItem("mock_riders")
+  if (!existing) {
+    localStorage.setItem("mock_riders", JSON.stringify(initialRiders))
+  } else {
+    try {
+      const parsed = JSON.parse(existing)
+      const updated = parsed.map((r: any, idx: number) => {
+        const fallback = initialRiders[idx % initialRiders.length]
+        return {
+          ...fallback,
+          ...r,
+          email: r.email || fallback.email,
+          image: r.image || fallback.image,
+          vehicleType: r.vehicleType || fallback.vehicleType,
+          licenceNumber: r.licenceNumber || fallback.licenceNumber,
+          nrcNumber: r.nrcNumber || fallback.nrcNumber,
+        }
+      })
+      localStorage.setItem("mock_riders", JSON.stringify(updated))
+    } catch {
+      localStorage.setItem("mock_riders", JSON.stringify(initialRiders))
+    }
+  }
+}

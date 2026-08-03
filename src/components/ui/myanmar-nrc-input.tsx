@@ -76,8 +76,7 @@ export function MyanmarNrcInput({
 
   // Sync from external `value` (e.g. edit-mode pre-fill)
   React.useEffect(() => {
-    if (!value) return
-    const parsed = parseNrcString(value)
+    const parsed = parseNrcString(value || "")
     if (parsed.stateCode !== stateCode) setStateCode(parsed.stateCode)
     if (parsed.townshipCode !== townshipCode) setTownshipCode(parsed.townshipCode)
     if (parsed.nrcType !== nrcType) setNrcType(parsed.nrcType)

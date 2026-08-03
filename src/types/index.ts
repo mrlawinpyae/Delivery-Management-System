@@ -75,6 +75,10 @@ export interface RiderSummary {
   phone: string | null
   status: "AVAILABLE" | "BUSY" | "OFFLINE"
   image?: string
+  email?: string
+  vehicleType?: string
+  licenceNumber?: string
+  nrcNumber?: string
 }
 
 export interface CreateRiderPayload {
