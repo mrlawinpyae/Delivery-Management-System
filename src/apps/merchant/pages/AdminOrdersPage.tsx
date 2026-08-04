@@ -8,6 +8,11 @@ import {
   Truck,
   AlertCircle,
   TrendingUp,
+  Eye,
+  MapPin,
+  Phone,
+  User as UserIcon,
+  Store,
 } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis, Pie, PieChart, Cell, Label } from "recharts"
 import { Button } from "@/components/ui/button"
@@ -26,6 +31,7 @@ import {
 } from "@/components/ui/chart"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 import type { AdminOrder, OrderStatus } from "@/types"
 
 // ─── Status Color Theory Config ──────────────────────────────────────────────
@@ -123,6 +129,9 @@ function SkeletonRow() {
       <td className="px-6 py-4">
         <div className="h-6 w-24 rounded-full bg-slate-200" />
       </td>
+      <td className="px-6 py-4">
+        <div className="h-8 w-20 rounded bg-slate-200" />
+      </td>
     </tr>
   )
 }
@@ -132,6 +141,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const navigate = useNavigate()
 
   const fetchOrders = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -367,7 +377,7 @@ export default function AdminOrdersPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                {["Order ID", "Amount", "Status"].map((h) => (
+                {["Order ID", "Amount", "Status", "Actions"].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3.5 text-xs font-extrabold uppercase tracking-wider text-slate-600"
@@ -382,7 +392,7 @@ export default function AdminOrdersPage() {
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={3}>
+                  <td colSpan={4}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-slate-200">
                         <ShoppingBag size={24} className="text-slate-400" />
@@ -434,6 +444,19 @@ export default function AdminOrdersPage() {
                             <Icon size={12} strokeWidth={2.5} />
                             {cfg.label}
                           </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 shadow-xs font-bold text-slate-700 cursor-pointer"
+                            onClick={() => navigate(`/admin/orders/${order.orderId}`)}
+                          >
+                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                            View
+                          </Button>
                         </td>
                       </motion.tr>
                     )

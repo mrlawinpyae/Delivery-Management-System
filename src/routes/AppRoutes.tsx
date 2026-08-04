@@ -20,8 +20,7 @@ import AdminOrdersPage from "@/apps/merchant/pages/AdminOrdersPage"
 import AdminRidersPage from "@/apps/merchant/pages/AdminRidersPage"
 import AdminRestaurantsPage from "@/apps/merchant/pages/AdminRestaurantsPage"
 import AdminRestaurantDetailsPage from "@/apps/merchant/pages/AdminRestaurantDetailsPage"
-
-
+import AdminOrderDetailsPage from "@/apps/merchant/pages/AdminOrderDetailsPage"
 
 export const router = createBrowserRouter([
   {
@@ -93,6 +92,10 @@ export const router = createBrowserRouter([
           {
             path: "",
             element: <AdminOrdersPage />,
+          },
+          {
+            path: "orders/:id",
+            element: <AdminOrderDetailsPage />,
           },
           {
             path: "riders",
