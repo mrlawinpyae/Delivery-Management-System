@@ -37,9 +37,10 @@ export default function RestaurantMenu() {
     }
   }, [seconds, error, restaurantInfo, menuItems, isLoading, navigate])
 
-  const handleIncrement = (item: any) => {
+  const handleIncrement = (item: any, index?: number) => {
+    const itemId = item.itemId || item._id || item.id || `menu-item-${index ?? 0}`
     addToCart({
-      itemId: item.itemId,
+      itemId,
       name: item.name,
       price: item.price,
       quantity: 1,
@@ -135,13 +136,14 @@ export default function RestaurantMenu() {
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {(menuItems || []).map((item: any, index: number) => {
-            const currentQty = cartItems[item.itemId]?.quantity || 0
+            const itemId = item.itemId || item._id || item.id || `menu-item-${index}`
+            const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =
               item.isAvailable !== false && item.available !== false
 
             return (
               <motion.div
-                key={item.itemId}
+                key={itemId}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.04 }}
@@ -187,7 +189,7 @@ export default function RestaurantMenu() {
                     {/* Action Buttons */}
                     {currentQty === 0 ? (
                       <button
-                        onClick={() => handleIncrement(item)}
+                        onClick={() => handleIncrement(item, index)}
                         disabled={!isAvailable}
                         className="flex items-center gap-1.5 rounded-full bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all hover:cursor-pointer hover:bg-zinc-800 active:scale-95 disabled:opacity-50"
                       >
