@@ -14,6 +14,7 @@ interface CartStore {
   items: Record<string, CartItem>
   addToCart: (item: CartItem) => void
   removeFromCart: (itemId: string) => void
+  removeEntireItem: (itemId: string) => void
   clearCart: () => void
 }
 
@@ -39,6 +40,12 @@ export const useCartStore = create<CartStore>()(
           } else {
             delete newItems[itemId]
           }
+          return { items: newItems }
+        }),
+      removeEntireItem: (itemId) =>
+        set((state) => {
+          const newItems = { ...state.items }
+          delete newItems[itemId]
           return { items: newItems }
         }),
       clearCart: () => set({ items: {} }),

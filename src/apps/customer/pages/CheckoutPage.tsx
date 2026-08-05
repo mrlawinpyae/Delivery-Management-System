@@ -1,12 +1,12 @@
 import { Link, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react"
+import { Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react"
 
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 
 export default function CheckoutPage() {
-  const { items, addToCart, removeFromCart } = useCartStore()
+  const { items, addToCart, removeFromCart, removeEntireItem } = useCartStore()
 
   const cartArray = Object.values(items)
 
@@ -67,8 +67,15 @@ export default function CheckoutPage() {
               transition={{
                 duration: 0.2,
               }}
-              className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+              className="relative rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
             >
+              <button
+                onClick={() => removeEntireItem(item.itemId)}
+                className="absolute right-3 top-3 flex items-center justify-center rounded-full p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500"
+              >
+                <X size={16} />
+              </button>
+
               <div className="flex items-start gap-4">
                 {/* Image */}
 

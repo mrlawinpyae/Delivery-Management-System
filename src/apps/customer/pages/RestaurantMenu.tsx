@@ -38,7 +38,7 @@ export default function RestaurantMenu() {
   }, [seconds, error, restaurantInfo, menuItems, isLoading, navigate])
 
   const handleIncrement = (item: any, index?: number) => {
-    const itemId = item.itemId || item._id || item.id || `menu-item-${index ?? 0}`
+    const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index ?? 0}`
     addToCart({
       itemId,
       name: item.name,
@@ -136,7 +136,7 @@ export default function RestaurantMenu() {
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {(menuItems || []).map((item: any, index: number) => {
-            const itemId = item.itemId || item._id || item.id || `menu-item-${index}`
+            const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index}`
             const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =
               item.isAvailable !== false && item.available !== false
