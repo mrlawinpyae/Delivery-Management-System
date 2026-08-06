@@ -231,7 +231,7 @@ export default function DeliveryInfoPage() {
     // Build the request body that matches POST /api/order/save-order
     const orderData = {
       customerId,
-      totalAmount,
+      // totalAmount,
       shipping_phone: phone,
       deliveryAddress: address,
       latitude: position.lat,

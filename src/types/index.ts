@@ -4,6 +4,7 @@ export type OrderStatus =
   | "PREPARING"
   | "OUT_FOR_DELIVERY"
   | "DELIVERED"
+  | "CANCELLED"
 
 export interface User {
   _id: string

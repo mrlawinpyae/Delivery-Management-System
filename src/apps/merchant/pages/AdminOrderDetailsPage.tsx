@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+import axios from "@/lib/axios"
 import {
   ShoppingBag,
   RefreshCw,
@@ -8,11 +9,14 @@ import {
   User as UserIcon,
   Store,
   ArrowLeft,
+  Info,
+  CheckCircle2,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Loader2 } from "lucide-react"
 
 // Google Maps
@@ -82,6 +86,41 @@ export default function AdminOrderDetailsPage() {
   
   const [orderDetails, setOrderDetails] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  const handleCancelOrder = async () => {
+    setIsCancelling(true)
+    try {
+      await axios.put(`/orders/${id}/admin-reject`)
+      setOrderDetails((prev: any) => ({ ...prev, status: "CANCELLED" }))
+      toast.success("Order cancelled successfully")
+      setIsCancelDialogOpen(false)
+    } catch (error) {
+      console.error("Error cancelling order:", error)
+      toast.error("Failed to cancel order")
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  const handleConfirmOrder = async () => {
+    setIsConfirming(true)
+    try {
+      await axios.put(`/orders/${id}/admin-accept`)
+      setOrderDetails((prev: any) => ({ ...prev, status: "DELIVERED" }))
+      toast.success("Order confirmed successfully")
+      setIsConfirmDialogOpen(false)
+      navigate("/admin")
+    } catch (error) {
+      console.error("Error confirming order:", error)
+      toast.error("Failed to confirm order")
+    } finally {
+      setIsConfirming(false)
+    }
+  }
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -90,46 +129,23 @@ export default function AdminOrderDetailsPage() {
   })
 
   useEffect(() => {
-    // Simulate API call with fake data since backend isn't ready
-    setLoading(true)
-    const loadFakeData = () => {
-      setTimeout(() => {
-        setOrderDetails({
-          orderId: id,
-          status: "PENDING",
-          totalAmount: 35000,
-          latitude: 20.1489,
-          longitude: 94.9211,
-          deliveryAddress: "No 123, Bogyoke Road, Magway",
-          customer: {
-            name: "John Doe",
-            phone: "+95 9 123 456 789"
-          },
-          restaurant: {
-            name: "Spicy House",
-            phone: "+95 9 987 654 321",
-            image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80"
-          },
-          items: [
-            {
-              name: "Spicy Chicken Noodle",
-              quantity: 2,
-              priceAtPurchase: 15000,
-              image: "https://images.unsplash.com/photo-1552611052-33e04de081de?w=500&q=80"
-            },
-            {
-              name: "Thai Milk Tea",
-              quantity: 1,
-              priceAtPurchase: 5000,
-              image: "https://images.unsplash.com/photo-1556881286-fc6915169721?w=500&q=80"
-            }
-          ]
-        })
+    const fetchOrderDetails = async () => {
+      setLoading(true)
+      try {
+        const response = await axios.get(`/orders/admin/order-details/${id}`)
+        setOrderDetails(response.data.data || null)
+      } catch (error) {
+        console.error("Error fetching order details:", error)
+        toast.error("Failed to fetch order details")
+        setOrderDetails(null)
+      } finally {
         setLoading(false)
-      }, 600)
+      }
     }
     
-    loadFakeData()
+    if (id) {
+      fetchOrderDetails()
+    }
   }, [id])
 
   if (loading) {
@@ -150,6 +166,8 @@ export default function AdminOrderDetailsPage() {
     )
   }
 
+  const isFinalState = orderDetails.status === "CANCELLED" || orderDetails.status === "DELIVERED"
+
   return (
     <div className="mx-auto max-w-4xl space-y-7 pb-12">
       {/* ── Page Header ── */}
@@ -167,8 +185,8 @@ export default function AdminOrderDetailsPage() {
         >
           <ArrowLeft size={18} />
         </Button>
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 break-all">
             Order #{orderDetails.orderId}
           </h1>
           <p className="mt-1 text-sm font-semibold text-slate-500">
@@ -206,7 +224,7 @@ export default function AdminOrderDetailsPage() {
                   </p>
                 </div>
               </div>
-              {orderDetails.latitude && orderDetails.longitude ? (
+              {(orderDetails.latitude || orderDetails.customer?.latitude) && (orderDetails.longitude || orderDetails.customer?.longitude) ? (
                 <div className="mt-5 pt-5 border-t border-slate-200">
                   <p className="text-xs text-slate-500 font-medium mb-2 flex items-center gap-1.5">
                     <MapPin size={14} className="text-slate-400" /> Location Map
@@ -219,12 +237,12 @@ export default function AdminOrderDetailsPage() {
                     ) : (
                       <GoogleMap
                         mapContainerStyle={MAP_CONTAINER_STYLE}
-                        center={{ lat: orderDetails.latitude, lng: orderDetails.longitude }}
+                        center={{ lat: orderDetails.latitude || orderDetails.customer?.latitude, lng: orderDetails.longitude || orderDetails.customer?.longitude }}
                         zoom={16}
                         options={MAP_OPTIONS}
                       >
                         <OverlayView
-                          position={{ lat: orderDetails.latitude, lng: orderDetails.longitude }}
+                          position={{ lat: orderDetails.latitude || orderDetails.customer?.latitude, lng: orderDetails.longitude || orderDetails.customer?.longitude }}
                           mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                           getPixelPositionOffset={(width, height) => ({
                             x: -(width / 2),
@@ -257,7 +275,7 @@ export default function AdminOrderDetailsPage() {
               Order Items
             </h3>
             <div className="space-y-3">
-              {orderDetails.items?.map((item: any, idx: number) => (
+              {(orderDetails.items || orderDetails.restaurants?.[0]?.items)?.map((item: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 bg-white shadow-xs hover:border-slate-200 transition-colors">
                   {item.image ? (
                     <img src={item.image} alt={item.name} className="h-14 w-14 rounded-lg object-cover border border-slate-100" />
@@ -277,7 +295,7 @@ export default function AdminOrderDetailsPage() {
                   </div>
                 </div>
               ))}
-              {(!orderDetails.items || orderDetails.items.length === 0) && (
+              {(!(orderDetails.items || orderDetails.restaurants?.[0]?.items) || (orderDetails.items || orderDetails.restaurants?.[0]?.items).length === 0) && (
                 <p className="text-sm text-slate-500 italic px-2">No items found.</p>
               )}
             </div>
@@ -291,57 +309,149 @@ export default function AdminOrderDetailsPage() {
               <Store size={18} className="text-emerald-500" />
               Restaurant Information
             </h3>
-            <div className="flex items-center gap-5 rounded-xl border border-slate-200 bg-slate-50/50 p-5">
-                {orderDetails.restaurant?.image ? (
-                  <img src={orderDetails.restaurant.image} alt={orderDetails.restaurant.name} className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-sm" />
+            <div className="flex items-center gap-3 sm:gap-5 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
+                {(orderDetails.restaurant?.image || orderDetails.restaurants?.[0]?.image) ? (
+                  <img src={orderDetails.restaurant?.image || orderDetails.restaurants?.[0]?.image} alt={orderDetails.restaurant?.name || orderDetails.restaurants?.[0]?.name} className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-full object-cover border-2 border-white shadow-sm" />
                 ) : (
-                  <div className="h-16 w-16 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                    <Store size={24} className="text-slate-300" />
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                    <Store className="h-5 w-5 sm:h-6 sm:w-6 text-slate-300" />
                   </div>
                 )}
-                <div>
-                  <p className="text-base font-bold text-slate-900">{orderDetails.restaurant?.name || "Unknown Restaurant"}</p>
-                  <p className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-1">
-                    <Phone size={14} className="text-slate-400" />
-                    {orderDetails.restaurant?.phone || "N/A"}
-                  </p>
+                <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-bold text-slate-900 truncate">{orderDetails.restaurant?.name || orderDetails.restaurants?.[0]?.name || "Unknown Restaurant"}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-indigo-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-indigo-100 shrink-0 w-fit max-w-full">
+                    <Phone className="h-3 w-3 sm:h-[14px] sm:w-[14px] text-indigo-600 shrink-0" />
+                    <span className="text-[11px] sm:text-sm font-bold text-indigo-700 tracking-wide whitespace-nowrap">
+                      {orderDetails.restaurant?.phone || orderDetails.restaurants?.[0]?.phone || "N/A"}
+                    </span>
+                  </div>
                 </div>
             </div>
           </div>
 
           {/* Footer Section */}
-          <div className="pt-8 mt-8 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="pt-8 mt-8 border-t border-slate-200 flex flex-col items-center sm:flex-row sm:justify-between gap-6 text-center sm:text-left">
             <div>
               <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Amount</p>
               <p className="text-3xl font-black text-indigo-700">{orderDetails.totalAmount?.toLocaleString()} Ks</p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-6"
-                onClick={() => {
-                  toast.success("Order cancelled successfully");
-                  navigate("/admin");
-                }}
-              >
-                Cancel Order
-              </Button>
-              <Button 
-                size="lg"
-                className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-6"
-                onClick={() => {
-                  toast.success("Order confirmed successfully");
-                  navigate("/admin");
-                }}
-              >
-                Confirm Order
-              </Button>
+            <div className="flex flex-col items-center sm:items-end w-full sm:w-auto gap-2 sm:gap-3">
+              <div className="flex flex-col w-full sm:flex-row sm:w-auto gap-3">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  disabled={isFinalState}
+                  className="w-full sm:w-auto rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-8 disabled:opacity-50 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 cursor-pointer"
+                  onClick={() => setIsCancelDialogOpen(true)}
+                >
+                  Cancel Order
+                </Button>
+                <Button 
+                  size="lg"
+                  disabled={isFinalState}
+                  className="w-full sm:w-auto rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-8 disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-100 disabled:shadow-none cursor-pointer"
+                  onClick={() => setIsConfirmDialogOpen(true)}
+                >
+                  Confirm Order
+                </Button>
+              </div>
+              {isFinalState && (
+                <div className="flex items-center justify-center gap-1.5 mt-2 sm:mt-1 text-slate-400">
+                  <Info size={12} strokeWidth={3} className="text-slate-300" />
+                  <span className="text-[10px] font-bold tracking-widest uppercase">This order is in a final state</span>
+                </div>
+              )}
             </div>
           </div>
           
         </div>
       </motion.div>
+
+      {/* ── Cancel Confirmation Dialog ── */}
+      <AnimatePresence>
+        {isCancelDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-[340px] overflow-hidden rounded-[2rem] bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+                  <X className="h-7 w-7 text-red-600" strokeWidth={2.5} />
+                </div>
+                <h3 className="mb-3 text-lg font-normal text-slate-800">Verification</h3>
+                <p className="mb-8 text-[10px] font-bold leading-relaxed tracking-widest text-slate-400 uppercase max-w-[220px]">
+                  Confirming order as cancelled. This process cannot be reversed.
+                </p>
+                <div className="flex w-full gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full border-slate-200 bg-white text-[11px] font-bold tracking-widest text-slate-900 hover:bg-slate-50 h-11"
+                    onClick={() => setIsCancelDialogOpen(false)}
+                    disabled={isCancelling}
+                  >
+                    DISMISS
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-full bg-[#e33535] text-[11px] font-bold tracking-widest text-white hover:bg-[#c92d2d] shadow-[0_8px_20px_-6px_rgba(227,53,53,0.5)] h-11"
+                    onClick={handleCancelOrder}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : "YES. APPLY"}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Confirm Order Dialog ── */}
+      <AnimatePresence>
+        {isConfirmDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-[340px] overflow-hidden rounded-[2rem] bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+                  <CheckCircle2 className="h-7 w-7 text-green-500" strokeWidth={2.5} />
+                </div>
+                <h3 className="mb-3 text-lg font-normal text-slate-800">Verification</h3>
+                <p className="mb-8 text-[10px] font-bold leading-relaxed tracking-widest text-slate-400 uppercase max-w-[220px]">
+                  Confirming order as completed. This process cannot be reversed.
+                </p>
+                <div className="flex w-full gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-full border-slate-200 bg-white text-[11px] font-bold tracking-widest text-slate-900 hover:bg-slate-50 h-11"
+                    onClick={() => setIsConfirmDialogOpen(false)}
+                    disabled={isConfirming}
+                  >
+                    DISMISS
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-full bg-black text-[11px] font-bold tracking-widest text-white hover:bg-zinc-800 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)] h-11"
+                    onClick={handleConfirmOrder}
+                    disabled={isConfirming}
+                  >
+                    {isConfirming ? <Loader2 className="h-4 w-4 animate-spin" /> : "YES. APPLY"}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

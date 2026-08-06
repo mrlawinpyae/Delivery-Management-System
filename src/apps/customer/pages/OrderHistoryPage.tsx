@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import axios from "@/lib/axios"
 import { motion } from "framer-motion"
-import { Loader2, CheckCircle2, Clock, Package, ArrowRight } from "lucide-react"
+import { Loader2, CheckCircle2, Clock, Package, ArrowRight, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import type { Order } from "@/types/index.ts"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -21,15 +21,17 @@ export default function OrderHistoryPage() {
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-zinc-100 text-zinc-700"
+        return "bg-amber-50 text-amber-800 border-amber-300"
       case "PREPARING":
-        return "bg-blue-50 text-blue-700"
+        return "bg-sky-50 text-sky-800 border-sky-300"
       case "OUT_FOR_DELIVERY":
-        return "bg-amber-50 text-amber-700"
+        return "bg-indigo-50 text-indigo-800 border-indigo-300"
       case "DELIVERED":
-        return "bg-emerald-50 text-emerald-700"
+        return "bg-emerald-50 text-emerald-800 border-emerald-300"
+      case "CANCELLED":
+        return "bg-red-50 text-red-800 border-red-300"
       default:
-        return "bg-zinc-50 text-zinc-600"
+        return "bg-zinc-50 text-zinc-600 border-zinc-300"
     }
   }
 
@@ -47,6 +49,7 @@ export default function OrderHistoryPage() {
 
       try {
         const response = await axios.get(`/orders/getUserOrders/${id}`)
+       
         setOrders(response.data.data)
       } catch (error) {
         toast.error("Failed to load history.")
@@ -104,10 +107,12 @@ export default function OrderHistoryPage() {
                     </p>
                   </div>
                   <div
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase ${getStatusStyles(order.status)}`}
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase border ${getStatusStyles(order.status)}`}
                   >
                     {order.status === "DELIVERED" ? (
                       <CheckCircle2 className="h-3 w-3" />
+                    ) : order.status === "CANCELLED" ? (
+                      <XCircle className="h-3 w-3" />
                     ) : (
                       <Clock className="h-3 w-3" />
                     )}

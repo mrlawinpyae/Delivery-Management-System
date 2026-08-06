@@ -13,6 +13,7 @@ import {
   Phone,
   User as UserIcon,
   Store,
+  XCircle,
 } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis, Pie, PieChart, Cell, Label } from "recharts"
 import { Button } from "@/components/ui/button"
@@ -62,6 +63,11 @@ const STATUS_CONFIG: Record<
     label: "Delivered",
     icon: CheckCircle2,
     badgeClass: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    icon: XCircle,
+    badgeClass: "bg-red-50 text-red-800 border border-red-300 font-extrabold",
   },
 }
 
@@ -409,7 +415,11 @@ export default function AdminOrdersPage() {
               ) : (
                 <AnimatePresence initial={false}>
                   {orders.map((order, i) => {
-                    const cfg = STATUS_CONFIG[order.status]
+                    const cfg = STATUS_CONFIG[order.status] || {
+                      label: order.status || "Unknown",
+                      icon: AlertCircle,
+                      badgeClass: "bg-gray-50 text-gray-800 border border-gray-300 font-extrabold",
+                    }
                     const Icon = cfg.icon
                     return (
                       <motion.tr
