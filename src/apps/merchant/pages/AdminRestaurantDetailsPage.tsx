@@ -205,8 +205,8 @@ export default function AdminRestaurantDetailsPage() {
     }
 
     const priceNum = Number(formData.price)
-    if (isNaN(priceNum) || priceNum < 0) {
-      toast.error("Please enter a valid non-negative price.")
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast.error("Please enter a valid price greater than zero.")
       return
     }
 
@@ -572,6 +572,7 @@ export default function AdminRestaurantDetailsPage() {
                   id="price"
                   name="price"
                   type="number"
+                  min="1"
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="e.g. 1500"
