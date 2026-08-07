@@ -110,10 +110,10 @@ export default function AdminOrderDetailsPage() {
     setIsConfirming(true)
     try {
       await axios.put(`/orders/${id}/admin-accept`)
-      setOrderDetails((prev: any) => ({ ...prev, status: "DELIVERED" }))
-      toast.success("Order confirmed successfully")
+      setOrderDetails((prev: any) => ({ ...prev, status: "PREPARING" }))
+      toast.success("Order status changed to PREPARING")
       setIsConfirmDialogOpen(false)
-      navigate("/admin")
+      navigate(`/admin/orders/${id}/assign-rider`)
     } catch (error) {
       console.error("Error confirming order:", error)
       toast.error("Failed to confirm order")
