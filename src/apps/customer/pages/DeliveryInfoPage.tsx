@@ -220,6 +220,11 @@ export default function DeliveryInfoPage() {
       return
     }
 
+    if (locationError) {
+      toast.error(locationError)
+      return
+    }
+
     if (!address || address === "Unknown Location") {
       toast.error("Please wait while we detect your location.")
       return
