@@ -339,23 +339,43 @@ export default function AdminOrderDetailsPage() {
             </div>
             <div className="flex flex-col items-center sm:items-end w-full sm:w-auto gap-2 sm:gap-3">
               <div className="flex flex-col w-full sm:flex-row sm:w-auto gap-3">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  disabled={isFinalState}
-                  className="w-full sm:w-auto rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-8 disabled:opacity-50 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 cursor-pointer"
-                  onClick={() => setIsCancelDialogOpen(true)}
-                >
-                  Cancel Order
-                </Button>
-                <Button 
-                  size="lg"
-                  disabled={isFinalState}
-                  className="w-full sm:w-auto rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-8 disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-100 disabled:shadow-none cursor-pointer"
-                  onClick={() => setIsConfirmDialogOpen(true)}
-                >
-                  Confirm Order
-                </Button>
+                {orderDetails.status === "PREPARING" ? (
+                  <Button 
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-8 cursor-pointer"
+                    onClick={() => navigate(`/admin/orders/${id}/assign-rider`)}
+                  >
+                    Find nearest rider
+                  </Button>
+                ) : orderDetails.status === "OUT_FOR_DELIVERY" || orderDetails.status === "OUT FOR DELIVERY" ? (
+                  <Button 
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-8 cursor-pointer"
+                    onClick={() => navigate(`/admin/orders/${id}/rider-info`)}
+                  >
+                    View Rider Info
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      disabled={isFinalState}
+                      className="w-full sm:w-auto rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-8 disabled:opacity-50 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 cursor-pointer"
+                      onClick={() => setIsCancelDialogOpen(true)}
+                    >
+                      Cancel Order
+                    </Button>
+                    <Button 
+                      size="lg"
+                      disabled={isFinalState}
+                      className="w-full sm:w-auto rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-md font-bold px-8 disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-100 disabled:shadow-none cursor-pointer"
+                      onClick={() => setIsConfirmDialogOpen(true)}
+                    >
+                      Confirm Order
+                    </Button>
+                  </>
+                )}
               </div>
               {isFinalState && (
                 <div className="flex items-center justify-center gap-1.5 mt-2 sm:mt-1 text-slate-400">

@@ -47,6 +47,32 @@ export function parseNrcString(nrcString: string = ""): MyanmarNrcValue {
   return { stateCode: "", townshipCode: "", nrcType: "", nrcNumber: "" }
 }
 
+export function formatNrcDisplay(nrcString: string = ""): string {
+  const parsed = parseNrcString(nrcString)
+  if (!parsed.stateCode) return nrcString
+
+  const townshipCode = parsed.townshipCode
+  let townshipDisplay = townshipCode
+  const districts = getDistrictsByState(Number(parsed.stateCode)) as DistrictItem[]
+  
+  if (districts && districts.length > 0) {
+    const district = districts.find((d) => d.en === townshipCode)
+    if (district && district.mm) {
+      townshipDisplay = `${district.en} (${district.mm})`
+    }
+  } else {
+    const district = ALL_TOWNSHIPS.find((d) => d.en === townshipCode)
+    if (district && district.mm) {
+      townshipDisplay = `${district.en} (${district.mm})`
+    }
+  }
+
+  const typeItem = NRC_TYPES.find((t) => t.value === parsed.nrcType)
+  const typeDisplay = typeItem ? typeItem.label : parsed.nrcType
+
+  return `${parsed.stateCode} / ${townshipDisplay} ${typeDisplay} ${parsed.nrcNumber}`
+}
+
 // ─── MyanmarNrcInput ──────────────────────────────────────────────────────────
 
 export interface MyanmarNrcInputProps {
