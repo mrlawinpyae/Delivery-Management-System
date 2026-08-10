@@ -10,6 +10,7 @@ interface User {
   image?: string
   img?: string
   phone?: string
+  email?: string
 }
 
 interface AuthState {

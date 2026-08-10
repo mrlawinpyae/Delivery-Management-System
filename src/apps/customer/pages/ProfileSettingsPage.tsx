@@ -23,11 +23,18 @@ const myanmarCountry = defaultCountries.find(
 )
 
 // ─── VALIDATION SCHEMA ───
-// Phone is validated separately (controlled state + libphonenumber-js),
-// matching the same pattern used on DeliveryInfoPage.
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().min(1, "Email is required").email("Invalid email format"),
+  phone: z.string().refine(
+    (val) => {
+      if (!val || val === "+95") return true
+      return isValidPhoneNumber(val, "MM")
+    },
+    {
+      message: "Please enter a valid Myanmar phone number.",
+    }
+  ),
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
@@ -36,6 +43,7 @@ export default function ProfileSettingsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const login = useAuthStore((state) => state.login)
+  const logout = useAuthStore((state) => state.logout)
   const updateUser = useAuthStore((state) => state.updateUser)
 
   // ─── LOADING STATE FOR FETCHING DATA ───
@@ -43,9 +51,6 @@ export default function ProfileSettingsPage() {
 
   // ─── AVATAR PREVIEW STATE ───
   const [avatarPreview, setAvatarPreview] = useState<string>("")
-
-  // ─── PHONE STATE (controlled outside RHF, same as DeliveryInfoPage) ───
-  const [phone, setPhone] = useState("")
 
   // ─── IMAGE UPLOAD STATE ───
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -55,15 +60,22 @@ export default function ProfileSettingsPage() {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting, isDirty },
+    setValue,
+    watch,
+    formState: { isSubmitting, isDirty, errors, dirtyFields },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
     },
+    mode: "onChange",
   })
-
+  useEffect(() => {
+    register("phone")
+  }, [register])
+  const formPhone = watch("phone") || ""
   const userId =
     user?.userId ||
     (user as { id?: string })?.id ||
@@ -85,10 +97,8 @@ export default function ProfileSettingsPage() {
         reset({
           name: userData.name || "",
           email: userData.email || "",
+          phone: userData.phone || "",
         })
-
-        // Seed the phone state from the API (or persisted user)
-        setPhone(userData.phone || "")
 
         // Local user image has precedence, then API image, then default fallback
         const currentImg =
@@ -141,11 +151,11 @@ export default function ProfileSettingsPage() {
       const uploadedUrl =
         typeof response.data === "string"
           ? response.data
-          : (response.data?.url ||
-             response.data?.data?.url ||
-             response.data?.img ||
-             response.data?.image ||
-             "")
+          : response.data?.url ||
+            response.data?.data?.url ||
+            response.data?.img ||
+            response.data?.image ||
+            ""
 
       if (uploadedUrl) {
         setAvatarPreview(uploadedUrl)
@@ -163,19 +173,14 @@ export default function ProfileSettingsPage() {
   }
 
   const isImageChanged = avatarPreview !== (user?.img || user?.image || "")
-  const isPhoneChanged = phone !== (user?.phone || "")
+
 
   // ─── SUBMIT HANDLER (UPDATE PROFILE) ───
   const onSubmit = async (data: ProfileFormValues) => {
-    // Validate phone number if provided
-    let finalPhone = phone
-    if (!phone || phone === "+95") {
+    let finalPhone = data.phone
+    if (!finalPhone || finalPhone === "+95") {
       finalPhone = ""
-    } else if (!isValidPhoneNumber(phone, "MM")) {
-      toast.error("Please enter a valid Myanmar phone number.")
-      return
     }
-
     const id =
       user?.userId ||
       (user as { id?: string })?.id ||
@@ -194,24 +199,43 @@ export default function ProfileSettingsPage() {
         phone: finalPhone,
       })
 
+      let emailUpdated = false
+      if (dirtyFields.email) {
+        await axios.put(`/auth/user/${id}/email`, {
+          newEmail: data.email,
+        })
+        emailUpdated = true
+      }
+
       const updatedUser = response.data?.data || response.data || {}
       const newImg = updatedUser.img || updatedUser.image || avatarPreview
+
+      if (emailUpdated) {
+        toast.success("Email updated successfully. Please log in again.")
+        setTimeout(() => {
+          logout()
+          navigate("/customer/login")
+        }, 3000)
+        return
+      }
 
       updateUser({
         name: updatedUser.name || data.name,
         image: newImg,
         img: newImg,
         phone: updatedUser.phone ?? finalPhone,
+        email: data.email,
       })
 
       // Reset RHF internal state with the new values so isDirty resets correctly
       reset({
         name: updatedUser.name || data.name,
         email: data.email,
+        phone: updatedUser.phone ?? finalPhone,
       })
 
       toast.success("Profile updated successfully!")
-      
+
       // setTimeout(() => {
       //   navigate("/customer")
       // }, 1000)
@@ -271,7 +295,7 @@ export default function ProfileSettingsPage() {
             </p>
           </div>
 
-                    {isLoadingData ? (
+          {isLoadingData ? (
             <div className="flex h-40 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
             </div>
@@ -340,8 +364,7 @@ export default function ProfileSettingsPage() {
                   <Mail className="absolute top-3.5 left-4 h-5 w-5 text-zinc-400" />
                   <input
                     {...register("email")}
-                    readOnly
-                    className="w-full cursor-not-allowed rounded-2xl border border-zinc-200 bg-zinc-100 py-3.5 pr-4 pl-12 text-sm text-zinc-500 outline-none"
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 py-3.5 pr-4 pl-12 text-sm transition-all outline-none focus:border-zinc-400 focus:bg-white focus:ring-4 focus:ring-zinc-100"
                   />
                 </div>
               </div>
@@ -354,8 +377,13 @@ export default function ProfileSettingsPage() {
                 <PhoneInput
                   defaultCountry="mm"
                   countries={myanmarCountry ? [myanmarCountry] : undefined}
-                  value={phone}
-                  onChange={(value) => setPhone(value)}
+                  value={formPhone}
+                  onChange={(val) => {
+                    setValue("phone", val, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }}
                   className="flex h-[50px] w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 px-3 text-sm transition-all focus-within:border-zinc-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-zinc-100"
                   inputClassName="!border-none !bg-transparent !outline-none !ring-0 !px-2 !text-sm !text-zinc-900 h-full"
                   countrySelectorStyleProps={{
@@ -371,7 +399,7 @@ export default function ProfileSettingsPage() {
               <div className="pt-4">
                 <button
                   disabled={
-                    (!isDirty && !isImageChanged && !isPhoneChanged) ||
+                    (!isDirty && !isImageChanged) ||
                     isSubmitting ||
                     isUploadingImage
                   }
