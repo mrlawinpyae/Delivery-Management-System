@@ -58,6 +58,7 @@ export const updateRiderSchema = z.object({
     .email("Invalid email address")
     .optional()
     .or(z.literal("")),
+  oldPassword: z.string().optional(),
   password: z.string().optional(),
   vehicleType: z.string().optional(),
   licenceNumber: z.string().optional(),

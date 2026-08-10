@@ -77,7 +77,11 @@ export default function CustomerAuth() {
       : { name: data.name, email: data.email, password: data.password }
 
     try {
-      const response = await axios.post(endpoint, payload)
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          "X-Skip-401": "true",
+        },
+      })
 
     
       toast.success(response.data.message || "Success!")

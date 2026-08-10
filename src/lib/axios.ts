@@ -21,7 +21,8 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const skip401 = error.config?.headers?.["X-Skip-401"] === "true";
+    if (error.response?.status === 401 && !skip401) {
       // Token is invalid or expired
       useAuthStore.getState().logout()
       // If the user isn't in a protected route, we might want to force navigation here,

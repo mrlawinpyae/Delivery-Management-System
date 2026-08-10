@@ -125,6 +125,7 @@ export function RiderFormDialog({
           name: r.name || "",
           phone: initialPhone,
           email: initialEmail,
+          oldPassword: "",
           password: "",
           vehicleType: initialVehicle,
           licenceNumber: initialLicence,
@@ -242,6 +243,18 @@ export function RiderFormDialog({
           ...(data.nrcNumber ? { nrcNumber: data.nrcNumber } : {}),
           ...(data.image ? { image: data.image } : {}),
         })
+
+        if (data.oldPassword && data.password) {
+          await axios.put(`/auth/user/${rider.riderId}/password`, {
+            oldPassword: data.oldPassword,
+            newPassword: data.password,
+          }, {
+            headers: {
+              "X-Skip-401": "true"
+            }
+          })
+        }
+
         toast.success("Rider info updated!")
         onUpdated?.(rider.riderId, {
           name: data.name,
@@ -404,29 +417,56 @@ export function RiderFormDialog({
                 />
               </FormField>
 
-              {/* Password field */}
-              <FormField label={isEdit ? "New Password" : "Password"}>
-                <div className="relative">
-                  <Input
-                    {...register("password")}
-                    type={showPassword ? "text" : "password"}
-                    placeholder={isEdit ? "*********" : "••••••••"}
-                    className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={16} />
-                    ) : (
-                      <Eye size={16} />
-                    )}
-                  </button>
+              {/* Password fields */}
+              {isEdit ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Old Password">
+                    <Input
+                      {...register("oldPassword")}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500"
+                    />
+                  </FormField>
+                  <FormField label="New Password">
+                    <div className="relative">
+                      <Input
+                        {...register("password")}
+                        type={showPassword ? "text" : "password"}
+                        placeholder="*********"
+                        className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </FormField>
                 </div>
-              </FormField>
+              ) : (
+                <FormField label="Password">
+                  <div className="relative">
+                    <Input
+                      {...register("password")}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="bg-white text-slate-900 border-slate-300 focus:ring-indigo-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </FormField>
+              )}
 
                 {/* Myanmar NRC Number */}
                 <FormField label="Myanmar NRC Number">
