@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useThemeStore } from "@/store/useThemeStore"
+import { useAuthStore } from "@/store/useAuthStore"
 
 // Google Maps
 import {
@@ -227,6 +228,7 @@ async function fetchRoute(
 export default function RiderTaskDetails() {
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
+  const user = useAuthStore((s) => s.user)
 
   const { id } = useParams()
   const navigate = useNavigate()
@@ -262,13 +264,12 @@ export default function RiderTaskDetails() {
 
   useEffect(() => {
     let active = true
-    const loadAssignedOrders = async () => {
+    const loadOrderDetails = async () => {
       try {
-        const res = await axios.get("/orders/ord_1003/getAssignedOrders")
+        const res = await axios.get(`/rider/order/${id}/details`)
         if (!active) return
-        if (res.data && res.data.data) {
-          const fetchedOrders = res.data.data as Order[]
-          const targetOrder = fetchedOrders.find((o) => o._id === id) || null
+        if (res.data) {
+          const targetOrder = res.data.data || res.data
           setOrder(targetOrder)
         }
       } catch (error) {
@@ -281,7 +282,7 @@ export default function RiderTaskDetails() {
       }
     }
 
-    loadAssignedOrders()
+    loadOrderDetails()
     return () => {
       active = false
     }
@@ -341,14 +342,14 @@ export default function RiderTaskDetails() {
     }
 
     const dest = {
-      lat: order.deliveryLocation.latitude,
-      lng: order.deliveryLocation.longitude,
+      lat: (order as any).recipient?.latitude ?? order.deliveryLocation?.latitude ?? 20.1489,
+      lng: (order as any).recipient?.longitude ?? order.deliveryLocation?.longitude ?? 94.9211,
     }
 
     // GeoJSON is [lng, lat]
-    const pickups = order.pickupLocations.map((p) => ({
-      lat: p.coordinates[1],
-      lng: p.coordinates[0],
+    const pickups = (order.pickupLocations || []).map((p) => ({
+      lat: (p as any).latitude ?? p.coordinates?.[1] ?? 20.151,
+      lng: (p as any).longitude ?? p.coordinates?.[0] ?? 94.933,
     }))
     if (pickups.length === 0) {
       pickups.push({ lat: 20.151, lng: 94.933 })
@@ -377,12 +378,12 @@ export default function RiderTaskDetails() {
     fittedRef.current = true
 
     const dest = {
-      lat: order.deliveryLocation.latitude,
-      lng: order.deliveryLocation.longitude,
+      lat: (order as any).recipient?.latitude ?? order.deliveryLocation?.latitude ?? 20.1489,
+      lng: (order as any).recipient?.longitude ?? order.deliveryLocation?.longitude ?? 94.9211,
     }
-    const pickups = order.pickupLocations.map((p) => ({
-      lat: p.coordinates[1],
-      lng: p.coordinates[0],
+    const pickups = (order.pickupLocations || []).map((p) => ({
+      lat: (p as any).latitude ?? p.coordinates?.[1] ?? 20.151,
+      lng: (p as any).longitude ?? p.coordinates?.[0] ?? 94.933,
     }))
     if (pickups.length === 0) pickups.push({ lat: 20.151, lng: 94.933 })
 
@@ -407,15 +408,21 @@ export default function RiderTaskDetails() {
     }
 
     try {
-      setUpdating(order._id)
-      const res = await axios.put(`/api/orders/${order._id}/status`, {
-        status: nextStatus,
-      })
+      const orderId = order._id || (order as any).id || (order as any).orderId || ""
+      setUpdating(orderId)
+      let res;
+      if (nextStatus === "DELIVERED") {
+        res = await axios.put(`/rider/${user?.userId}/order/${orderId}/complete`)
+      } else {
+        res = await axios.put(`/orders/${orderId}/status`, {
+          status: nextStatus,
+        })
+      }
       if (res.data) {
         const readableStatus =
           nextStatus === "OUT_FOR_DELIVERY" ? "Picked Up" : "Delivered"
         toast.success(
-          `Order #${order._id.slice(-4)} marked as ${readableStatus}!`,
+          `Order #${orderId.slice(-6).toUpperCase()} marked as ${readableStatus}!`,
           {
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
           }
@@ -441,12 +448,12 @@ export default function RiderTaskDetails() {
   const mapCenter = useMemo(() => {
     if (!order) return MAGWAY_CENTER
     const dest = {
-      lat: order.deliveryLocation.latitude,
-      lng: order.deliveryLocation.longitude,
+      lat: order.deliveryLocation?.latitude ?? 20.1489,
+      lng: order.deliveryLocation?.longitude ?? 94.9211,
     }
-    const pickups = order.pickupLocations.map((p) => ({
-      lat: p.coordinates[1],
-      lng: p.coordinates[0],
+    const pickups = (order.pickupLocations || []).map((p) => ({
+      lat: p.coordinates?.[1] ?? 20.151,
+      lng: p.coordinates?.[0] ?? 94.933,
     }))
     if (pickups.length === 0) pickups.push({ lat: 20.151, lng: 94.933 })
     const pts = [...pickups, dest]
@@ -519,15 +526,15 @@ export default function RiderTaskDetails() {
   // Derive coordinates for the map — supports multiple pickup locations
   const getMapData = (o: Order) => {
     const dest = {
-      lat: o.deliveryLocation.latitude,
-      lng: o.deliveryLocation.longitude,
+      lat: (o as any).recipient?.latitude ?? o.deliveryLocation?.latitude ?? 20.1489,
+      lng: (o as any).recipient?.longitude ?? o.deliveryLocation?.longitude ?? 94.9211,
     }
 
     // GeoJSON is [lng, lat], convert each to { lat, lng }
     const pickups: { name: string; position: { lat: number; lng: number } }[] =
-      o.pickupLocations.map((p) => ({
-        name: p.name,
-        position: { lat: p.coordinates[1], lng: p.coordinates[0] },
+      (o.pickupLocations || []).map((p) => ({
+        name: (p as any).restaurantName ?? p?.name ?? "Unknown Pickup",
+        position: { lat: (p as any).latitude ?? p?.coordinates?.[1] ?? 20.151, lng: (p as any).longitude ?? p?.coordinates?.[0] ?? 94.933 },
       }))
 
     // Fallback if no pickup locations are provided
@@ -807,7 +814,7 @@ export default function RiderTaskDetails() {
                       <div
                         onClick={() => setSelectedPickupIdx(null)}
                         style={{ cursor: "pointer" }}
-                        title={`Deliver to: ${order.customer.name}`}
+                        title={`Deliver to: ${(order as any).recipient?.name || order.customer?.name || (order as any).customerName || "Customer"}`}
                       >
                         <DestinationPin />
                       </div>
@@ -898,7 +905,7 @@ export default function RiderTaskDetails() {
                 <p
                   className={`mt-1 text-[11px] font-mono ${isDark ? "text-slate-600" : "text-slate-400"}`}
                 >
-                  #{order._id.slice(-6).toUpperCase()}
+                  #{((order as any).orderId || order._id || "").slice(-6).toUpperCase()}
                 </p>
               </div>
 
@@ -906,8 +913,8 @@ export default function RiderTaskDetails() {
                 {/* Locations */}
                 <div className="space-y-4">
                   {/* Pickup Addresses */}
-                  {order.pickupLocations.map((pickup, idx) => (
-                    <div key={pickup._id} className="flex gap-3">
+                  {(order.pickupLocations || []).map((pickup, idx) => (
+                    <div key={pickup._id || (pickup as any).id || idx} className="flex gap-3">
                       <div
                         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500`}
                       >
@@ -916,15 +923,15 @@ export default function RiderTaskDetails() {
                       <div>
                         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
                           Pickup Location
-                          {order.pickupLocations.length > 1
+                          {(order.pickupLocations || []).length > 1
                             ? ` #${idx + 1}`
                             : ""}
                         </p>
                         <p className="text-sm font-bold leading-tight mt-0.5">
-                          {pickup.name}
+                          {(pickup as any)?.restaurantName || pickup?.name || "Unknown Pickup"}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
-                          {pickup.address}
+                          {pickup?.address || "Address not provided"}
                         </p>
                       </div>
                     </div>
@@ -942,7 +949,7 @@ export default function RiderTaskDetails() {
                         Delivery Destination
                       </p>
                       <p className="text-sm font-bold leading-tight mt-0.5">
-                        {order.deliveryLocation.address}
+                        {(order as any).deliveryDestinationAddress || order.deliveryLocation?.address || (order as any).deliveryAddress || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -954,8 +961,8 @@ export default function RiderTaskDetails() {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={order.customer.image}
-                      alt={order.customer.name}
+                      src={order.customer?.image || (order as any).recipient?.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"}
+                      alt={(order as any).recipient?.name || order.customer?.name || (order as any).customerName || "Customer"}
                       onError={(e) => {
                         ;(e.target as HTMLImageElement).src =
                           "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
@@ -967,12 +974,12 @@ export default function RiderTaskDetails() {
                         Recipient
                       </p>
                       <p className="text-base font-bold mt-0.5">
-                        {order.customer.name}
+                        {(order as any).recipient?.name || order.customer?.name || (order as any).customerName || "Customer"}
                       </p>
                     </div>
                   </div>
                   <a
-                    href={`tel:${order.shipping_phone}`}
+                    href={`tel:${(order as any).recipient?.phone || order.shipping_phone}`}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
                       isDark
                         ? "bg-slate-800 text-cyan-400 hover:bg-slate-700/80"
@@ -992,9 +999,9 @@ export default function RiderTaskDetails() {
                   <div
                     className={`rounded-2xl p-4 space-y-3 ${isDark ? "bg-slate-900/50" : "bg-slate-50"}`}
                   >
-                    {order.items.map((item) => (
+                    {((order as any).receiptSummary || order.items || []).map((item: any, i: number) => (
                       <div
-                        key={item.itemId}
+                        key={item.itemId || i}
                         className="flex items-center justify-between text-sm"
                       >
                         <div className="flex items-center gap-3">
@@ -1005,22 +1012,35 @@ export default function RiderTaskDetails() {
                                 : "bg-slate-200 text-slate-700"
                             }`}
                           >
-                            {item.quantity}x
+                            {item.quantity || 1}x
                           </span>
-                          <span className="font-medium">{item.name}</span>
+                          <span className="font-medium">{item?.name || "Item"}</span>
                         </div>
                         <span className="font-semibold">
-                          {(item.priceAtPurchase * item.quantity).toLocaleString()}{" "}
+                          {((item?.price || item?.priceAtPurchase || 0) * (item?.quantity || 1)).toLocaleString()}{" "}
                           Ks
                         </span>
                       </div>
                     ))}
+                    {(!((order as any).receiptSummary || order.items)?.length) && (order as any).itemCount && (
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3">
+                          <span className={`flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${isDark ? "bg-slate-800 text-cyan-400" : "bg-slate-200 text-slate-700"}`}>
+                            {(order as any).itemCount}x
+                          </span>
+                          <span className="font-medium">Items</span>
+                        </div>
+                        <span className="font-semibold">
+                          {((order as any).totalCashCollect || order.totalAmount || 0).toLocaleString()} Ks
+                        </span>
+                      </div>
+                    )}
                     <div className="border-t border-slate-700/10 pt-3 mt-1 flex items-center justify-between text-sm font-bold">
                       <span>Total Cash Collect</span>
                       <span
                         className={`text-base font-bold ${isDark ? "text-cyan-400" : "text-sky-600"}`}
                       >
-                        {order.totalAmount.toLocaleString()} Ks
+                        {((order as any).totalCashCollect || order.totalAmount || 0).toLocaleString()} Ks
                       </span>
                     </div>
                   </div>
@@ -1031,10 +1051,10 @@ export default function RiderTaskDetails() {
                   <div className="pt-4">
                     <button
                       onClick={() => handleUpdateStatus(order.status)}
-                      disabled={updating === order._id}
+                      disabled={updating === (order._id || (order as any).id || (order as any).orderId)}
                       className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all shadow-md active:scale-95 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-emerald-500/15 disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      {updating === order._id ? (
+                      {updating === (order._id || (order as any).id || (order as any).orderId) ? (
                         <>
                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           Updating...

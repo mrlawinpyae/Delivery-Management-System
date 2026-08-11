@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useThemeStore } from "@/store/useThemeStore"
+import { useAuthStore } from "@/store/useAuthStore"
 
 // Types matching API contract
 interface Customer {
@@ -52,6 +53,8 @@ export default function RiderTasks() {
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
 
+  const user = useAuthStore((s) => s.user)
+
   const navigate = useNavigate()
 
   const [orders, setOrders] = useState<Order[]>([])
@@ -61,13 +64,21 @@ export default function RiderTasks() {
   useEffect(() => {
     let active = true
     const loadAssignedOrders = async () => {
+      if (!user?.userId) {
+        if (active) setLoading(false)
+        return
+      }
       try {
-        const res = await axios.get("/orders/ord_1003/getAssignedOrders")
+        const [activeRes, completedRes] = await Promise.all([
+          axios.get(`/rider/${user.userId}/tasks?type=active`),
+          axios.get(`/rider/${user.userId}/tasks?type=completed`)
+        ])
         if (!active) return
-        if (res.data && res.data.data) {
-          const fetchedOrders = res.data.data
-          setOrders(fetchedOrders)
-        }
+        
+        const activeTasks = activeRes.data?.data || (Array.isArray(activeRes.data) ? activeRes.data : [])
+        const completedTasks = completedRes.data?.data || (Array.isArray(completedRes.data) ? completedRes.data : [])
+        
+        setOrders([...activeTasks, ...completedTasks])
       } catch (error) {
         console.error(error)
         toast.error("Failed to load assigned tasks")
@@ -82,7 +93,7 @@ export default function RiderTasks() {
     return () => {
       active = false
     }
-  }, [])
+  }, [user?.userId])
 
   // Filter orders by active/completed tabs
   const activeOrders = orders.filter((o) => o.status !== "DELIVERED")
@@ -101,14 +112,34 @@ export default function RiderTasks() {
     try {
       await axios.put(`/orders/${orderId}/status`, { status: "OUT_FOR_DELIVERY" })
       setOrders((prev) =>
-        prev.map((o) => (o._id === orderId ? { ...o, status: "OUT_FOR_DELIVERY" } : o))
+        prev.map((o) => {
+          const id = o._id || (o as any).id || (o as any).orderId
+          return id === orderId ? { ...o, status: "OUT_FOR_DELIVERY" } : o
+        })
       )
-      toast.success("Task successfully accepted!", {
-        description: "Status changed to OUT FOR DELIVERY."
-      })
+      toast.success("This task accepted")
     } catch (error) {
       console.error(error)
       toast.error("Failed to accept task")
+    }
+  }
+
+  const handleCompleteTask = async (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation()
+    try {
+      await axios.put(`/orders/${orderId}/status`, { status: "DELIVERED" })
+      setOrders((prev) =>
+        prev.map((o) => {
+          const id = o._id || (o as any).id || (o as any).orderId
+          return id === orderId ? { ...o, status: "DELIVERED" } : o
+        })
+      )
+      toast.success("Delivery completed!", {
+        description: "Status changed to DELIVERED."
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to complete delivery")
     }
   }
 
@@ -245,16 +276,16 @@ export default function RiderTasks() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             <AnimatePresence mode="popLayout">
               {displayedOrders.map((order) => {
-
+                const orderId = order._id || (order as any).id || (order as any).orderId || "";
                 return (
                   <motion.div
-                    key={order._id}
+                    key={orderId}
                     layout
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    onClick={() => navigate(`/rider/${order._id}`)}
-                    className={`relative flex flex-col cursor-pointer overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
+                    onClick={() => navigate(`/rider/${orderId}`)}
+                    className={`relative flex flex-col overflow-hidden rounded-2xl border p-5 transition-all duration-300 cursor-pointer ${
                       isDark
                         ? "border-slate-800 bg-slate-900/30 hover:border-slate-700/60 hover:bg-slate-900/55"
                         : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
@@ -267,11 +298,11 @@ export default function RiderTasks() {
                           ID:
                         </span>
                         <span className="text-sm font-bold tracking-tight">
-                          #{order._id.slice(-6).toUpperCase()}
+                          #{orderId ? orderId.slice(-6).toUpperCase() : "N/A"}
                         </span>
                       </div>
-                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusColors[order.status]}`}>
-                        {order.status.replace(/_/g, " ")}
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusColors[order.status || "PENDING"] || statusColors["PENDING"]}`}>
+                        {(order.status || "PENDING").replace(/_/g, " ")}
                       </span>
                     </div>
 
@@ -288,10 +319,10 @@ export default function RiderTasks() {
                             Deliver To
                           </p>
                           <p className="text-xs font-bold leading-tight mt-0.5 line-clamp-1">
-                            {order.deliveryLocation.address}
+                            {order.deliveryLocation?.address || (order as any).deliveryAddress || "N/A"}
                           </p>
                           <p className="text-[11px] text-slate-400">
-                            Cust: {order.customer.name}
+                            Cust: {order.customer?.name || (order as any).customerName || "Unknown"}
                           </p>
                         </div>
                       </div>
@@ -302,19 +333,19 @@ export default function RiderTasks() {
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1 text-slate-400">
                           <ShoppingBag className="h-3.5 w-3.5" />
-                          <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)} Items</span>
+                          <span>{(order as any).itemCount ?? (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0)} Items</span>
                         </div>
                         <span className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
-                          {order.totalAmount.toLocaleString()} Ks
+                          {(order.totalAmount || 0).toLocaleString()} Ks
                         </span>
                       </div>
                     </div>
 
                     {/* Action Button */}
-                    {order.status === "PREPARING" && (
+                    {order.status !== "DELIVERED" && order.status !== "OUT_FOR_DELIVERY" && (
                       <div className="mt-4 pt-2">
                         <button
-                          onClick={(e) => handleAcceptTask(e, order._id)}
+                          onClick={(e) => handleAcceptTask(e, orderId)}
                           className="w-full rounded-xl bg-sky-500 py-2.5 text-center text-sm font-bold text-white shadow-md hover:bg-sky-600 active:scale-95 transition-all"
                         >
                           Accept Task
