@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { User, Mail, Save, ArrowLeft, Loader2, Camera } from "lucide-react"
+import { User, Mail, Save, ArrowLeft, Loader2, Camera, Lock, Eye, EyeOff } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import type { FieldErrors } from "react-hook-form"
@@ -35,6 +35,24 @@ const profileSchema = z.object({
       message: "Please enter a valid Myanmar phone number.",
     }
   ),
+  oldPassword: z.string().optional().or(z.literal("")),
+  newPassword: z.string().optional().or(z.literal("")),
+}).refine((data) => {
+  if (data.newPassword && data.newPassword.length > 0) {
+    return data.newPassword.length >= 6;
+  }
+  return true;
+}, {
+  message: "New password must be at least 6 characters",
+  path: ["newPassword"],
+}).refine((data) => {
+  if (data.newPassword && data.newPassword.length > 0) {
+    return !!data.oldPassword && data.oldPassword.length > 0;
+  }
+  return true;
+}, {
+  message: "Old password is required to set a new password",
+  path: ["oldPassword"],
 })
 
 type ProfileFormValues = z.infer<typeof profileSchema>
@@ -55,7 +73,10 @@ export default function ProfileSettingsPage() {
   // ─── IMAGE UPLOAD STATE ───
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-  // ─── REACT HOOK FORM SETUP ───
+  // ─── PASSWORD VISIBILITY STATE ───
+  const [showOldPassword, setShowOldPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
   const {
     register,
     handleSubmit,
@@ -69,9 +90,12 @@ export default function ProfileSettingsPage() {
       name: "",
       email: "",
       phone: "",
+      oldPassword: "",
+      newPassword: "",
     },
     mode: "onChange",
   })
+
   useEffect(() => {
     register("phone")
   }, [register])
@@ -98,6 +122,8 @@ export default function ProfileSettingsPage() {
           name: userData.name || "",
           email: userData.email || "",
           phone: userData.phone || "",
+          oldPassword: "",
+          newPassword: "",
         })
 
         // Local user image has precedence, then API image, then default fallback
@@ -191,6 +217,40 @@ export default function ProfileSettingsPage() {
     }
 
     try {
+      let passwordUpdated = false
+      if (data.newPassword && data.oldPassword) {
+        try {
+          const passRes = await axios.put(`/auth/user/${id}/password`, {
+            oldPassword: data.oldPassword,
+            newPassword: data.newPassword,
+          }, {
+            headers: {
+              "X-Skip-401": "true"
+            }
+          })
+          
+          // Strict check for error in 200 response
+          if (passRes.status >= 200 && passRes.status < 300 && !passRes.data?.error && passRes.data?.status !== "error") {
+            passwordUpdated = true
+          } else {
+            toast.error(passRes.data?.error || passRes.data?.message || "Failed to update password")
+            return
+          }
+        } catch (err: unknown) {
+          const passErr = err as {
+            response?: { data?: { error?: string, message?: string } }
+            message?: string
+          }
+          const errorMessage =
+            passErr.response?.data?.error ||
+            passErr.response?.data?.message ||
+            passErr.message ||
+            "Failed to update password"
+          toast.error(errorMessage)
+          return
+        }
+      }
+
       // Axios PUT request to update profile
       const response = await axios.put(`/auth/user/${id}`, {
         name: data.name,
@@ -219,6 +279,15 @@ export default function ProfileSettingsPage() {
         return
       }
 
+      if (passwordUpdated) {
+        toast.success("Password updated successfully. Please log in again.")
+        setTimeout(() => {
+          logout()
+          navigate("/customer/login")
+        }, 3000)
+        return
+      }
+
       updateUser({
         name: updatedUser.name || data.name,
         image: newImg,
@@ -232,6 +301,8 @@ export default function ProfileSettingsPage() {
         name: updatedUser.name || data.name,
         email: data.email,
         phone: updatedUser.phone ?? finalPhone,
+        oldPassword: "",
+        newPassword: "",
       })
 
       toast.success("Profile updated successfully!")
@@ -259,6 +330,8 @@ export default function ProfileSettingsPage() {
       toast.error(firstError.message)
     }
   }
+
+
 
   return (
     <div className="min-h-screen bg-[#F9F9FB] p-4 pt-10 md:p-10">
@@ -369,8 +442,54 @@ export default function ProfileSettingsPage() {
                 </div>
               </div>
 
+              {/* OLD PASSWORD FIELD */}
+              <div className="relative pt-4 border-t border-zinc-100">
+                <label className="mb-2 block text-xs font-medium text-zinc-500">
+                  Old Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute top-3.5 left-4 h-5 w-5 text-zinc-400" />
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    {...register("oldPassword")}
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 py-3.5 pr-12 pl-12 text-sm transition-all outline-none focus:border-zinc-400 focus:bg-white focus:ring-4 focus:ring-zinc-100"
+                    placeholder="Enter current password to change it"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute top-3.5 right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
+                  >
+                    {showOldPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* NEW PASSWORD FIELD */}
+              <div className="relative">
+                <label className="mb-2 block text-xs font-medium text-zinc-500">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute top-3.5 left-4 h-5 w-5 text-zinc-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    {...register("newPassword")}
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 py-3.5 pr-12 pl-12 text-sm transition-all outline-none focus:border-zinc-400 focus:bg-white focus:ring-4 focus:ring-zinc-100"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-3.5 right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
               {/* PHONE FIELD — PhoneInput (mirrors DeliveryInfoPage) */}
-              <div>
+              <div className="pt-4 border-t border-zinc-100">
                 <label className="mb-2 block text-xs font-medium text-zinc-500">
                   Phone Number
                 </label>
