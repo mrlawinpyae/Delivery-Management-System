@@ -1,4 +1,4 @@
-import axios from "@/lib/axios"
+
 import { useState, useRef, useCallback, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
@@ -26,8 +26,6 @@ import {
   useLoadScript,
   OverlayView,
 } from "@react-google-maps/api"
-import { useCartStore } from "@/store/useCartStore"
-import { useAuthStore } from "@/store/useAuthStore"
 import { useLocation } from "react-router-dom"
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string
@@ -120,8 +118,6 @@ export default function DeliveryInfoPage() {
   const [locating, setLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
-  const { items, clearCart } = useCartStore()
-  const user = useAuthStore((state) => state.user)
 
   const [position, setPosition] = useState<{ lat: number; lng: number }>(
     MAGWAY_CENTER
@@ -212,7 +208,7 @@ export default function DeliveryInfoPage() {
     navigate("/customer/checkout")
   }
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     const result = deliverySchema.safeParse({ phone, address })
 
     if (!result.success) {
@@ -230,48 +226,14 @@ export default function DeliveryInfoPage() {
       return
     }
 
-    const customerId = user
-      ? user.userId || (user as any).id || (user as any)._id
-      : "GUEST"
-    // Build the request body that matches POST /api/order/save-order
-    const orderData = {
-      customerId,
-      // totalAmount,
-      shipping_phone: phone,
-      deliveryAddress: address,
-      latitude: position.lat,
-      longitude: position.lng,
-      items: Object.values(items).map((i) => ({
-        restaurantId: i.restaurantId,
-        name: i.name,
-        image: i.image,
-        quantity: i.quantity,
-        priceAtPurchase: i.price,
-      })),
-    }
-
-    try {
-      const response = await axios.post("/orders/save-order", orderData)
-
-      // Success: { message, data: { orderId, status }, error: null }
-      const { message, data } = response.data
-      toast.success(message || "Order placed successfully!")
-      console.log(
-        "Order Success — orderId:",
-        data?.orderId,
-        "status:",
-        data?.status
-      )
-      clearCart()
-      setTimeout(() => {
-        navigate("/customer/order-history", { replace: true })
-      }, 1500)
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error ||
-        "Failed to place order. Please try again."
-      toast.error(errorMessage)
-    }
+    navigate("/customer/payment", {
+      state: {
+        phone,
+        address,
+        position,
+        totalAmount,
+      },
+    })
   }
 
   useEffect(() => {
@@ -370,7 +332,7 @@ export default function DeliveryInfoPage() {
           onClick={handleConfirm}
           disabled={locating || !isWithinMagwayBounds(position.lat, position.lng)}
         >
-          {locating ? "Locating..." : "Confirm Order"}{" "}
+          {locating ? "Locating..." : "Next"}{" "}
           <ArrowRight size={18} className="ml-2" />
         </Button>
         <button

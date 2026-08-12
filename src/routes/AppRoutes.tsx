@@ -6,6 +6,7 @@ import RestaurantMenu from "@/apps/customer/pages/RestaurantMenu"
 import BrowseRestaurants from "@/apps/customer/pages/BrowseRestaurants"
 import CheckoutPage from "@/apps/customer/pages/CheckoutPage"
 import DeliveryInfoPage from "@/apps/customer/pages/DeliveryInfoPage"
+import PaymentPage from "@/apps/customer/pages/PaymentPage"
 import OrderHistoryPage from "@/apps/customer/pages/OrderHistoryPage"
 import OrderDetailsPage from "@/apps/customer/pages/OrderDetailsPage"
 import CustomerAuth from "@/apps/customer/pages/CustomerAuth"
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
               {
                 path: "delivery-info",
                 element: <DeliveryInfoPage />,
+              },
+              {
+                path: "payment",
+                element: <PaymentPage />,
               },
               {
                 path: "order-history",
