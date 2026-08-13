@@ -383,7 +383,7 @@ export default function AdminOrdersPage() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                {["Order ID", "Amount", "Status", "Actions"].map((h) => (
+                {["Order ID", "Customer", "Amount", "Status", "Actions"].map((h) => (
                   <th
                     key={h}
                     className="px-6 py-3.5 text-xs font-extrabold uppercase tracking-wider text-slate-600"
@@ -398,7 +398,7 @@ export default function AdminOrdersPage() {
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-slate-200">
                         <ShoppingBag size={24} className="text-slate-400" />
@@ -421,6 +421,12 @@ export default function AdminOrdersPage() {
                       badgeClass: "bg-gray-50 text-gray-800 border border-gray-300 font-extrabold",
                     }
                     const Icon = cfg.icon
+                    
+                    const getRef = (index: number, ref?: string) => {
+                      if (ref) return `#${String(ref).padStart(5, '0')}`;
+                      return `#${String(total - index).padStart(5, '0')}`;
+                    }
+
                     return (
                       <motion.tr
                         key={order.orderId}
@@ -431,8 +437,15 @@ export default function AdminOrdersPage() {
                       >
                         {/* Order ID */}
                         <td className="px-6 py-4">
-                          <span className="font-mono text-sm font-bold text-slate-900">
-                            {order.orderId}
+                          <span className="font-mono text-sm font-bold text-slate-400">
+                            {getRef(i, order.reference)}
+                          </span>
+                        </td>
+                        
+                        {/* Customer */}
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-black uppercase text-slate-900">
+                            {order.customerName || "Customer"}
                           </span>
                         </td>
 
