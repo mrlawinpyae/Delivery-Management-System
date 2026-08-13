@@ -65,16 +65,13 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col bg-white">
       {/* ── Brand Logo Header ── */}
-      <div className="flex items-center gap-3 px-6 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25">
-          <LayoutDashboard size={18} />
+      <div className="flex items-center gap-3 px-6 py-6">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
+          <LayoutDashboard size={16} />
         </div>
         <div>
           <p className="text-sm font-bold tracking-tight text-slate-900">
             Admin Portal
-          </p>
-          <p className="text-[10px] font-bold text-indigo-600 tracking-widest uppercase">
-            delivx enterprise
           </p>
         </div>
       </div>
@@ -84,36 +81,36 @@ function SidebarContent({
       {/* ── Admin Profile Badge ── */}
       <div className="px-4 py-4">
         {profile ? (
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-3 shadow-2xs">
-            <Avatar className="h-9 w-9 shrink-0 ring-2 ring-indigo-100">
+          <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-slate-50">
+            <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={profile.image} alt={profile.name} />
-              <AvatarFallback className="bg-indigo-100 text-xs font-bold text-indigo-700">
+              <AvatarFallback className="bg-slate-100 text-xs font-semibold text-slate-600">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-slate-900">
+              <p className="truncate text-xs font-semibold text-slate-900">
                 {profile.name}
               </p>
-              <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200">
+              <p className="truncate text-[10px] text-slate-500">
                 {profile.role}
-              </span>
+              </p>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3.5 py-3 border border-slate-200">
-            <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
+          <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+            <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-20 animate-pulse rounded-full bg-slate-200" />
-              <div className="h-2 w-14 animate-pulse rounded-full bg-slate-100" />
+              <div className="h-2 w-16 animate-pulse rounded-full bg-slate-100" />
+              <div className="h-2 w-10 animate-pulse rounded-full bg-slate-50" />
             </div>
           </div>
         )}
       </div>
 
       {/* ── Navigation List ── */}
-      <nav className="flex-1 space-y-1 px-3 pb-2">
-        <p className="mb-2.5 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+      <nav className="flex-1 space-y-0.5 px-3 pb-2">
+        <p className="mb-3 px-4 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           Management
         </p>
         {NAV.map((item) => {
@@ -124,21 +121,21 @@ function SidebarContent({
               key={item.path}
               to={item.path}
               onClick={onNavClick}
-              className={`group relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all duration-200 ${
+              className={`group relative flex items-center gap-3 rounded-lg px-4 py-2 text-xs font-medium transition-all ${
                 active
-                  ? "bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600 font-bold shadow-2xs"
-                  : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               <Icon
                 size={16}
-                className={active ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}
+                className={active ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}
                 strokeWidth={active ? 2.5 : 2}
               />
               <span>{item.label}</span>
               <ChevronRight
                 size={14}
-                className={`ml-auto transition-opacity ${active ? "text-indigo-500 opacity-100" : "opacity-0 group-hover:opacity-40"}`}
+                className={`ml-auto transition-opacity ${active ? "opacity-100 text-slate-400" : "opacity-0 group-hover:opacity-40"}`}
               />
             </Link>
           )
@@ -151,9 +148,9 @@ function SidebarContent({
       <div className="px-3 py-3">
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-600 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border hover:border-rose-200"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-xs font-medium text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900"
         >
-          <LogOut size={16} />
+          <LogOut size={16} className="text-slate-400" />
           <span>Log Out</span>
         </button>
       </div>
@@ -240,10 +237,10 @@ export default function MerchantLayout() {
       {/* ══ MOBILE TOP BAR ══ */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-2xs">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-white shadow-sm">
             <LayoutDashboard size={14} />
           </div>
-          <span className="text-sm font-bold text-slate-900">
+          <span className="text-sm font-semibold text-slate-900">
             Admin Portal
           </span>
         </div>
@@ -299,21 +296,23 @@ export default function MerchantLayout() {
 
       {/* ══ MAIN CONTENT ══ */}
       <main
-        className={`flex-1 overflow-y-auto p-5 bg-[#f1f5f9] transition-all duration-300 ease-in-out ${
+        className={`flex-1 overflow-y-auto bg-slate-50/50 transition-all duration-300 ease-in-out ${
           desktopOpen ? "md:p-8" : "md:p-8 md:pl-16"
         }`}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <div className="mx-auto max-w-6xl p-5 md:p-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.2 }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   )

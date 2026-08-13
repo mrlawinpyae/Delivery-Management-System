@@ -47,27 +47,27 @@ const STATUS_CONFIG: Record<
   PENDING: {
     label: "Pending",
     icon: Clock,
-    badgeClass: "bg-amber-50 text-amber-800 border border-amber-300 font-extrabold",
+    badgeClass: "bg-slate-100 text-slate-700",
   },
   PREPARING: {
     label: "Preparing",
     icon: AlertCircle,
-    badgeClass: "bg-sky-50 text-sky-800 border border-sky-300 font-extrabold",
+    badgeClass: "bg-indigo-50 text-indigo-700",
   },
   OUT_FOR_DELIVERY: {
     label: "Out for Delivery",
     icon: Truck,
-    badgeClass: "bg-indigo-50 text-indigo-800 border border-indigo-300 font-extrabold",
+    badgeClass: "bg-blue-50 text-blue-700",
   },
   DELIVERED: {
     label: "Delivered",
     icon: CheckCircle2,
-    badgeClass: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold",
+    badgeClass: "bg-emerald-50 text-emerald-700",
   },
   CANCELLED: {
     label: "Cancelled",
     icon: XCircle,
-    badgeClass: "bg-red-50 text-red-800 border border-red-300 font-extrabold",
+    badgeClass: "bg-rose-50 text-rose-700",
   },
 }
 
@@ -78,19 +78,19 @@ const barChartConfig = {
   },
   PENDING: {
     label: "Pending",
-    color: "oklch(0.769 0.188 70.08)",
+    color: "#64748b", // slate-500
   },
   PREPARING: {
     label: "Preparing",
-    color: "oklch(0.714 0.203 196.91)",
+    color: "#6366f1", // indigo-500
   },
   OUT_FOR_DELIVERY: {
     label: "In Transit",
-    color: "oklch(0.585 0.233 277)",
+    color: "#3b82f6", // blue-500
   },
   DELIVERED: {
     label: "Delivered",
-    color: "oklch(0.765 0.177 163.22)",
+    color: "#10b981", // emerald-500
   },
 } satisfies ChartConfig
 
@@ -100,19 +100,19 @@ const pieChartConfig = {
   },
   PENDING: {
     label: "Pending",
-    color: "oklch(0.769 0.188 70.08)",
+    color: "#64748b",
   },
   PREPARING: {
     label: "Preparing",
-    color: "oklch(0.714 0.203 196.91)",
+    color: "#6366f1",
   },
   OUT_FOR_DELIVERY: {
     label: "In Transit",
-    color: "oklch(0.585 0.233 277)",
+    color: "#3b82f6",
   },
   DELIVERED: {
     label: "Delivered",
-    color: "oklch(0.765 0.177 163.22)",
+    color: "#10b981",
   },
 } satisfies ChartConfig
 
@@ -171,10 +171,10 @@ export default function AdminOrdersPage() {
 
   // Chart data
   const barData = [
-    { status: "PENDING", count: byStatus("PENDING"), fill: "oklch(0.769 0.188 70.08)" },
-    { status: "PREPARING", count: byStatus("PREPARING"), fill: "oklch(0.714 0.203 196.91)" },
-    { status: "OUT_FOR_DELIVERY", count: byStatus("OUT_FOR_DELIVERY"), fill: "oklch(0.585 0.233 277)" },
-    { status: "DELIVERED", count: byStatus("DELIVERED"), fill: "oklch(0.765 0.177 163.22)" },
+    { status: "PENDING", count: byStatus("PENDING"), fill: "#64748b" },
+    { status: "PREPARING", count: byStatus("PREPARING"), fill: "#6366f1" },
+    { status: "OUT_FOR_DELIVERY", count: byStatus("OUT_FOR_DELIVERY"), fill: "#3b82f6" },
+    { status: "DELIVERED", count: byStatus("DELIVERED"), fill: "#10b981" },
   ]
 
   const pieData = barData.filter((d) => d.count > 0)
@@ -189,10 +189,10 @@ export default function AdminOrdersPage() {
         className="flex items-start justify-between"
       >
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
             Order Management
           </h1>
-          <p className="mt-1 text-sm font-semibold text-slate-500">
+          <p className="text-sm text-slate-500">
             Live overview of all system orders
           </p>
         </div>
@@ -201,7 +201,7 @@ export default function AdminOrdersPage() {
           size="sm"
           onClick={() => fetchOrders(true)}
           disabled={refreshing}
-          className="border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+          className="text-slate-600 shadow-xs hover:bg-slate-50"
         >
           <RefreshCw
             size={14}
@@ -223,21 +223,20 @@ export default function AdminOrdersPage() {
       >
         {/* Bar Chart — Order Distribution by Status */}
         <motion.div variants={fadeUp}>
-          <Card className="border border-slate-200 bg-white shadow-xs">
+          <Card className="shadow-xs border-slate-200/60">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-bold text-slate-900">
+                  <CardTitle className="text-base font-semibold text-slate-900">
                     Order Breakdown
                   </CardTitle>
-                  <CardDescription className="text-xs font-medium text-slate-500">
+                  <CardDescription className="text-xs text-slate-500">
                     Distribution across all statuses
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 px-3 py-1.5">
-                  <TrendingUp size={14} className="text-indigo-600" />
-                  <span className="text-sm font-black text-indigo-700">{total}</span>
-                  <span className="text-xs font-semibold text-indigo-500">total</span>
+                <div className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1">
+                  <TrendingUp size={14} className="text-slate-500" />
+                  <span className="text-sm font-semibold text-slate-900">{total}</span>
                 </div>
               </div>
             </CardHeader>
@@ -279,13 +278,13 @@ export default function AdminOrdersPage() {
 
         {/* Pie Chart — Status Proportions */}
         <motion.div variants={fadeUp}>
-          <Card className="border border-slate-200 bg-white shadow-xs">
+          <Card className="shadow-xs border-slate-200/60">
             <CardHeader className="pb-2">
               <div>
-                <CardTitle className="text-base font-bold text-slate-900">
+                <CardTitle className="text-base font-semibold text-slate-900">
                   Status Overview
                 </CardTitle>
-                <CardDescription className="text-xs font-medium text-slate-500">
+                <CardDescription className="text-xs text-slate-500">
                   Proportion of orders per status
                 </CardDescription>
               </div>
@@ -367,14 +366,14 @@ export default function AdminOrdersPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.15 }}
-        className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs"
+        className="overflow-hidden rounded-xl border border-slate-200/60 bg-white shadow-xs"
       >
         {/* Table header bar */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-          <h2 className="text-base font-bold text-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-900">
             All Orders
           </h2>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-700 border border-slate-200">
+          <span className="rounded-md bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500 border border-slate-100">
             {total} records
           </span>
         </div>
@@ -462,9 +461,9 @@ export default function AdminOrdersPage() {
                         {/* Status */}
                         <td className="px-6 py-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${cfg.badgeClass}`}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.badgeClass}`}
                           >
-                            <Icon size={12} strokeWidth={2.5} />
+                            <Icon size={12} strokeWidth={2} />
                             {cfg.label}
                           </span>
                         </td>
@@ -472,9 +471,9 @@ export default function AdminOrdersPage() {
                         {/* Actions */}
                         <td className="px-6 py-4">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="h-8 shadow-xs font-bold text-slate-700 cursor-pointer"
+                            className="h-8 text-slate-500 hover:text-slate-900"
                             onClick={() => navigate(`/admin/orders/${order.orderId}`)}
                           >
                             <Eye className="mr-1.5 h-3.5 w-3.5" />

@@ -414,11 +414,11 @@ export default function AdminRestaurantsPage() {
         </div>
         <Button
           onClick={() => handleOpenModal()}
-          className="group h-10 cursor-pointer rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md active:scale-95"
+          className="group h-9 rounded-md bg-slate-900 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
         >
           <Plus
-            className="mr-2 h-4 w-4 transition-transform group-hover:scale-110"
-            strokeWidth={2.5}
+            className="mr-2 h-4 w-4"
+            strokeWidth={2}
           />
           Add Restaurant
         </Button>
@@ -453,7 +453,7 @@ export default function AdminRestaurantsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-2xl bg-white p-0 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md hover:ring-slate-300">
+                <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl bg-white p-0 shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
                   {/* Image Header */}
                   <div className="relative h-48 w-full shrink-0 bg-slate-50">
                     <img
@@ -469,7 +469,7 @@ export default function AdminRestaurantsPage() {
                   {/* Body */}
                   <div className="flex flex-1 flex-col p-5">
                     <div className="mb-6 space-y-2">
-                      <h3 className="line-clamp-1 text-xl font-bold tracking-tight text-slate-900">
+                      <h3 className="line-clamp-1 text-lg font-semibold text-slate-900">
                         {restaurant.name}
                       </h3>
                       <div className="flex items-start gap-2 text-sm text-slate-500">
@@ -494,21 +494,21 @@ export default function AdminRestaurantsPage() {
                       <div className="flex shrink-0 items-center gap-1.5">
                         <Button
                           size="icon"
-                          variant="outline"
-                          className="h-10 w-10 text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer"
+                          variant="ghost"
+                          className="h-9 w-9 text-slate-500 hover:text-slate-900"
                           onClick={() => handleOpenModal(restaurant)}
                           title="Edit Restaurant"
                         >
-                          <Edit2 className="h-4.5 w-4.5" />
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                         <Button
                           size="icon"
-                          variant="outline"
-                          className="h-10 w-10 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                          variant="ghost"
+                          className="h-9 w-9 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
                           onClick={() => setRestaurantToDelete(restaurant)}
                           title="Delete Restaurant"
                         >
-                          <Trash2 className="h-4.5 w-4.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -527,7 +527,7 @@ export default function AdminRestaurantsPage() {
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:max-w-[520px]">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-xl border border-slate-200/60 bg-white p-5 shadow-lg sm:max-w-[520px]">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <DialogHeader className="border-b border-slate-100 pb-1">
               <DialogTitle className="text-lg font-bold text-slate-900">
@@ -785,9 +785,9 @@ export default function AdminRestaurantsPage() {
         open={!!restaurantToDelete}
         onOpenChange={(open) => !open && setRestaurantToDelete(null)}
       >
-        <AlertDialogContent className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl sm:max-w-[400px]">
+        <AlertDialogContent className="rounded-xl border border-slate-200/60 bg-white p-6 shadow-lg sm:max-w-[400px]">
           <AlertDialogHeader className="space-y-3 text-center sm:text-left">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600 sm:mx-0">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600 sm:mx-0">
               <Trash2 className="h-6 w-6" />
             </div>
             <AlertDialogTitle className="text-lg font-bold text-slate-900">
