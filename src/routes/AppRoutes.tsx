@@ -24,6 +24,7 @@ import AdminRestaurantDetailsPage from "@/apps/merchant/pages/AdminRestaurantDet
 import AdminOrderDetailsPage from "@/apps/merchant/pages/AdminOrderDetailsPage"
 import AdminAssignRiderPage from "@/apps/merchant/pages/AdminAssignRiderPage"
 import AdminOrderRiderDetailsPage from "@/apps/merchant/pages/AdminOrderRiderDetailsPage"
+import AdminProfilePage from "@/apps/merchant/pages/AdminProfilePage"
 
 export const router = createBrowserRouter([
   {
@@ -123,6 +124,10 @@ export const router = createBrowserRouter([
           {
             path: "restaurants/:id",
             element: <AdminRestaurantDetailsPage />,
+          },
+          {
+            path: "profile",
+            element: <AdminProfilePage />,
           },
         ],
       },

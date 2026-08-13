@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   LayoutDashboard,
   Store,
+  Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -34,6 +35,7 @@ const NAV = [
   { path: "/admin", label: "Orders", icon: ShoppingBag, exact: true },
   { path: "/admin/restaurants", label: "Restaurants", icon: Store, exact: false },
   { path: "/admin/riders", label: "Riders", icon: Users, exact: false },
+  { path: "/admin/profile", label: "Profile Settings", icon: Settings, exact: true },
 ]
 
 // ─── Sidebar inner content ────────────────────────────────────────────────────
