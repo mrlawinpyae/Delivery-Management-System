@@ -11,6 +11,9 @@ import {
   Info,
   Loader2,
   LogOut,
+  Car,
+  IdCard,
+  Activity,
 } from "lucide-react"
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -34,6 +37,15 @@ interface UserProfileData {
   phone: string
   email: string
   role: string
+  status?: string
+  nrcNumber?: string
+  vehicle?: {
+    id: string
+    riderId: string
+    type: string
+    licenceNumber: string
+    createdAt: string
+  }
 }
 
 export default function RiderProfile() {
@@ -58,7 +70,7 @@ export default function RiderProfile() {
     let isMounted = true
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`/auth/user/${userId}`)
+        const res = await axios.get(`/rider/${userId}/profile`)
         if (isMounted && res.data && res.data.data) {
           setProfile(res.data.data)
         }
@@ -103,6 +115,12 @@ export default function RiderProfile() {
     { icon: Mail, label: "Email Address", value: profile.email },
     { icon: Phone, label: "Phone Number", value: profile.phone },
     { icon: Bike, label: "Role", value: profile.role },
+    ...(profile.status ? [{ icon: Activity, label: "Status", value: profile.status }] : []),
+    ...(profile.nrcNumber ? [{ icon: IdCard, label: "NRC Number", value: profile.nrcNumber }] : []),
+    ...(profile.vehicle ? [
+      { icon: Car, label: "Vehicle Type", value: profile.vehicle.type },
+      { icon: IdCard, label: "Licence Number", value: profile.vehicle.licenceNumber },
+    ] : [])
   ]
 
   // Detect fallback placeholder image or custom photo
