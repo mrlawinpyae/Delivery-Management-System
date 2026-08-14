@@ -9,6 +9,7 @@ import axios from "@/lib/axios"
 import { useCartStore } from "@/store/useCartStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import kpayLogo from '../../../../src/imgs/kpaylogo.png';
+
 export default function PaymentPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -52,15 +53,43 @@ export default function PaymentPage() {
       ? user.userId || (user as any).id || (user as any)._id
       : "GUEST"
 
-    // Construct order data
+    let paymentImgUrl = ""
+    if (formData.screenshot) {
+      const uploadFormData = new FormData()
+      uploadFormData.append("file", formData.screenshot)
+
+      try {
+        const uploadResponse = await axios.post("/images/upload", uploadFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+
+        paymentImgUrl =
+          typeof uploadResponse.data === "string"
+            ? uploadResponse.data
+            : uploadResponse.data?.url ||
+              uploadResponse.data?.data?.url ||
+              uploadResponse.data?.img ||
+              uploadResponse.data?.image ||
+              ""
+      } catch (error) {
+        console.error("Error uploading screenshot:", error)
+        toast.error("Failed to upload screenshot.")
+        setIsSubmitting(false)
+        return
+      }
+    }
+
     const orderData = {
       customerId,
-      shipping_phone: phone,
+      shippingPhone: phone,
       deliveryAddress: address,
       latitude: position?.lat,
       longitude: position?.lng,
-      paymentMethod: formData.payment_method, // Added this field
+      paymentImg: paymentImgUrl,
       items: Object.values(items).map((i) => ({
+        menuItemId: i.itemId,
         restaurantId: i.restaurantId,
         name: i.name,
         image: i.image,
@@ -70,9 +99,7 @@ export default function PaymentPage() {
     }
 
     try {
-      // In a real app, you might use FormData to upload the screenshot if mobile_banking is chosen.
-      // But for now, we'll keep the same JSON endpoint as before.
-      const response = await axios.post("/orders/save-order", orderData)
+      const response = await axios.post("orders/v2/create", orderData)
 
       const { message, data } = response.data
       toast.success(message || "Order placed successfully!")

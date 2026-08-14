@@ -12,6 +12,7 @@ import {
   Info,
   CheckCircle2,
   X,
+  CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -263,6 +264,20 @@ export default function AdminOrderDetailsPage() {
                   <p className="text-sm font-bold text-slate-900">{orderDetails.deliveryAddress}</p>
                 </div>
               ) : null}
+              {orderDetails.paymentImg && (
+                <div className="mt-5 pt-5 border-t border-slate-200">
+                  <p className="text-xs text-slate-500 font-medium mb-3 flex items-center gap-1.5">
+                    <CreditCard size={14} className="text-slate-400" /> KPay Screenshot
+                  </p>
+                  <a href={orderDetails.paymentImg} target="_blank" rel="noopener noreferrer" className="inline-block">
+                    <img 
+                      src={orderDetails.paymentImg} 
+                      alt="KPay Screenshot" 
+                      className="h-20 w-20 object-cover rounded-xl border border-slate-200 shadow-sm hover:opacity-90 transition-opacity" 
+                    />
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
