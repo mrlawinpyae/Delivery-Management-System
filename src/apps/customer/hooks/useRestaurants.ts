@@ -14,11 +14,14 @@ export function useRestaurants() {
 }
 
 // 1.5 Get Infinite Restaurants Hook
-export function useInfiniteRestaurants() {
+export function useInfiniteRestaurants(searchTerm: string = "") {
   return useInfiniteQuery({
-    queryKey: ["restaurants", "infinite"],
+    queryKey: ["restaurants", "infinite", searchTerm],
     queryFn: async ({ pageParam = 0 }) => {
-      const { data } = await axios.get(`/restaurants?page=${pageParam}&size=10`)
+      const endpoint = searchTerm
+        ? `/restaurants/search?query=${encodeURIComponent(searchTerm)}&page=${pageParam}&size=10`
+        : `/restaurants?page=${pageParam}&size=10`
+      const { data } = await axios.get(endpoint)
       return data.data
     },
     initialPageParam: 0,

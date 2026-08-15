@@ -11,8 +11,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useSearch } from "@/context/SearchContext"
 
 export default function BrowseRestaurants() {
-  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteRestaurants()
   const { searchTerm } = useSearch()
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteRestaurants(searchTerm)
+
   
   const observerTarget = useRef<HTMLDivElement>(null)
 
@@ -33,11 +34,7 @@ export default function BrowseRestaurants() {
     return () => observer.disconnect()
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
-  const restaurantList = data?.pages.flat() || []
-  // Logic: Filter based on name
-  const filteredRestaurants = restaurantList.filter((shop: any) =>
-    shop.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredRestaurants = data?.pages.flat() || []
   if (isLoading) {
     return (
       <div className="flex h-[50vh] animate-pulse items-center justify-center font-serif text-sm font-medium text-zinc-400 italic">
