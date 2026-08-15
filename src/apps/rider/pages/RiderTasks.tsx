@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner"
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
+import { fetchEventSource } from "@microsoft/fetch-event-source"
 
 // Types matching API contract
 interface Customer {
@@ -60,6 +61,7 @@ export default function RiderTasks() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active")
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -92,6 +94,73 @@ export default function RiderTasks() {
     loadAssignedOrders()
     return () => {
       active = false
+    }
+  }, [user?.userId, refreshTrigger])
+
+  // SSE Notification setup
+  useEffect(() => {
+    if (!user?.userId) return
+
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "/api"
+    const token = useAuthStore.getState().token
+    const controller = new AbortController()
+
+    const connectSSE = async () => {
+      try {
+        await fetchEventSource(`${baseURL}/rider/${user.userId}/notifications`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "text/event-stream",
+          },
+          signal: controller.signal,
+          onopen(res) {
+            if (res.ok && res.status === 200) {
+              // console.log("Connected to SSE notifications")
+            } else {
+              console.log("Failed to connect to SSE", res.status)
+            }
+            return Promise.resolve()
+          },
+          onmessage(event) {
+            // console.log("SSE Message Received:", event)
+            if (!event.data || event.data === ":keep-alive") return
+
+            // Handle plain string responses (sometimes they contain colons so JSON parsing fails)
+            if (event.event === "CONNECTED" || event.data.includes("Successfully connected")) {
+              toast.success("Connected to live notifications")
+              return
+            }
+
+            try {
+              const data = JSON.parse(event.data)
+              toast.info(data.title || "New Notification", {
+                description: data.message || "You have a new update.",
+              })
+              // Trigger a refresh of the task list
+              setRefreshTrigger((p) => p + 1)
+            } catch (e) {
+              // Plain text message handling
+              toast.info(event.data)
+              setRefreshTrigger((p) => p + 1)
+            }
+          },
+          onclose() {
+            console.log("SSE connection closed by the server")
+          },
+          onerror(err) {
+            console.error("SSE Error: ", err)
+          },
+        })
+      } catch (err) {
+        console.error("SSE Connection Error", err)
+      }
+    }
+
+    connectSSE()
+
+    return () => {
+      controller.abort()
     }
   }, [user?.userId])
 
