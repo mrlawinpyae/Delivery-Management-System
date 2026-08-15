@@ -1,18 +1,39 @@
 // src/apps/customer/pages/BrowseRestaurants.tsx
 import { Link } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
-import { MapPin } from "lucide-react"
+import { MapPin, Loader2 } from "lucide-react"
+import { useEffect, useRef } from "react"
 
-import { useRestaurants } from "../hooks/useRestaurants"
+import { useInfiniteRestaurants } from "../hooks/useRestaurants"
 
 // Shadcn UI Components
 import { Card, CardContent } from "@/components/ui/card"
 import { useSearch } from "@/context/SearchContext"
 
 export default function BrowseRestaurants() {
-  const { data: restaurants, isLoading, error } = useRestaurants()
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteRestaurants()
   const { searchTerm } = useSearch()
-  const restaurantList = restaurants || []
+  
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const restaurantList = data?.pages.flat() || []
   // Logic: Filter based on name
   const filteredRestaurants = restaurantList.filter((shop: any) =>
     shop.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -102,6 +123,24 @@ export default function BrowseRestaurants() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Infinite Scroll Target */}
+        <div ref={observerTarget} className="flex w-full justify-center py-8">
+          {isFetchingNextPage ? (
+            <div className="flex items-center gap-2 text-zinc-400">
+              <Loader2 className="animate-spin" size={20} />
+              <span className="text-sm font-medium">Loading more kitchens...</span>
+            </div>
+          ) : hasNextPage ? (
+            <div className="h-10" />
+          ) : (
+            filteredRestaurants.length > 0 && (
+              <div className="py-4 text-center text-sm text-zinc-500">
+                You've reached the end of the list.
+              </div>
+            )
+          )}
         </div>
       </section>
     </div>

@@ -1,5 +1,5 @@
 // src/apps/customer/hooks/useRestaurants.ts
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query"
 import axios from "@/lib/axios"
 
 // 1. Get All Restaurants Hook
@@ -9,6 +9,22 @@ export function useRestaurants() {
     queryFn: async () => {
       const { data } = await axios.get("/restaurants")
       return data.data
+    },
+  })
+}
+
+// 1.5 Get Infinite Restaurants Hook
+export function useInfiniteRestaurants() {
+  return useInfiniteQuery({
+    queryKey: ["restaurants", "infinite"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data } = await axios.get(`/restaurants?page=${pageParam}&size=10`)
+      return data.data
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || lastPage.length < 10) return undefined
+      return allPages.length
     },
   })
 }
