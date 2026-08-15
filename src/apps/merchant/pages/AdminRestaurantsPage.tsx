@@ -148,6 +148,7 @@ export default function AdminRestaurantsPage() {
   const [mapPosition, setMapPosition] = useState<{ lat: number; lng: number }>(MAGWAY_CENTER)
   const [locating, setLocating] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
+  const skipReverseGeocodeRef = useRef(false)
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -212,7 +213,17 @@ export default function AdminRestaurantsPage() {
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create restaurant")
+      const resData = error?.response?.data;
+      if (resData?.message) {
+        toast.error(resData.message);
+      } else if (resData?.error && typeof resData.error === 'string') {
+        toast.error(resData.error);
+      } else if (resData && typeof resData === 'object') {
+        const msgs = Object.values(resData).filter(v => typeof v === 'string').join(', ');
+        toast.error(msgs || "Failed to create restaurant");
+      } else {
+        toast.error("Failed to create restaurant");
+      }
     },
   })
 
@@ -227,7 +238,17 @@ export default function AdminRestaurantsPage() {
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update restaurant")
+      const resData = error?.response?.data;
+      if (resData?.message) {
+        toast.error(resData.message);
+      } else if (resData?.error && typeof resData.error === 'string') {
+        toast.error(resData.error);
+      } else if (resData && typeof resData === 'object') {
+        const msgs = Object.values(resData).filter(v => typeof v === 'string').join(', ');
+        toast.error(msgs || "Failed to update restaurant");
+      } else {
+        toast.error("Failed to update restaurant");
+      }
     },
   })
 
@@ -271,6 +292,10 @@ export default function AdminRestaurantsPage() {
   // Reverse geocode whenever map position changes while modal is open
   useEffect(() => {
     if (!isModalOpen) return
+    if (skipReverseGeocodeRef.current) {
+      skipReverseGeocodeRef.current = false
+      return
+    }
     const fetchAddress = async () => {
       setIsGeocoding(true)
       try {
@@ -356,6 +381,16 @@ export default function AdminRestaurantsPage() {
       return
     }
 
+    if (!formData.name?.trim()) {
+      toast.error("Restaurant name is required.")
+      return
+    }
+
+    if (formData.latitude === "" || formData.longitude === "") {
+      toast.error("Please provide both latitude and longitude.")
+      return
+    }
+
     const payload = { ...formData, phone: finalPhone }
 
     if (editingRestaurant) {
@@ -427,10 +462,36 @@ export default function AdminRestaurantsPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
+    const newValue = name === "latitude" || name === "longitude" ? (value === "" ? "" : Number(value)) : value
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "latitude" || name === "longitude" ? (value === "" ? "" : Number(value)) : value,
+      [name]: newValue,
     }))
+
+    if (name === "latitude" && value !== "") {
+      const lat = Number(value)
+      if (!isNaN(lat)) {
+        skipReverseGeocodeRef.current = true
+        setMapPosition(prev => {
+          const newPos = { lat, lng: prev.lng }
+          mapRef.current?.panTo(newPos)
+          return newPos
+        })
+      }
+    }
+    
+    if (name === "longitude" && value !== "") {
+      const lng = Number(value)
+      if (!isNaN(lng)) {
+        skipReverseGeocodeRef.current = true
+        setMapPosition(prev => {
+          const newPos = { lat: prev.lat, lng }
+          mapRef.current?.panTo(newPos)
+          return newPos
+        })
+      }
+    }
   }
 
   return (
@@ -573,7 +634,7 @@ export default function AdminRestaurantsPage() {
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto rounded-xl border border-slate-200/60 bg-white p-5 shadow-lg sm:max-w-[520px]">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             <DialogHeader className="border-b border-slate-100 pb-1">
               <DialogTitle className="text-lg font-bold text-slate-900">
                 {editingRestaurant ? "Edit Restaurant" : "Add Restaurant"}
@@ -741,7 +802,7 @@ export default function AdminRestaurantsPage() {
                     htmlFor="address"
                     className="text-xs font-semibold text-slate-700"
                   >
-                    Auto-Generated Address
+                    Address
                   </Label>
                   {isGeocoding && (
                     <span className="flex items-center gap-1 text-[10px] font-medium text-indigo-600">
@@ -754,9 +815,9 @@ export default function AdminRestaurantsPage() {
                   id="address"
                   name="address"
                   value={formData.address}
-                  readOnly
-                  placeholder="Address will auto-generate from map point..."
-                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 text-sm text-slate-600"
+                  onChange={handleChange}
+                  placeholder="Enter address manually or select from map..."
+                  className="h-9 rounded-md border-slate-300 text-sm text-slate-900"
                 />
               </div>
 
@@ -773,9 +834,9 @@ export default function AdminRestaurantsPage() {
                   type="number"
                   step="any"
                   value={formData.latitude}
-                  readOnly
+                  onChange={handleChange}
                   placeholder="20.1451"
-                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 font-mono text-sm text-slate-600"
+                  className="h-9 rounded-md border-slate-300 font-mono text-sm text-slate-900"
                 />
               </div>
               <div className="space-y-1">
@@ -791,9 +852,9 @@ export default function AdminRestaurantsPage() {
                   type="number"
                   step="any"
                   value={formData.longitude}
-                  readOnly
+                  onChange={handleChange}
                   placeholder="94.9312"
-                  className="h-9 cursor-not-allowed rounded-md border-slate-200 bg-slate-50 font-mono text-sm text-slate-600"
+                  className="h-9 rounded-md border-slate-300 font-mono text-sm text-slate-900"
                 />
               </div>
             </div>
