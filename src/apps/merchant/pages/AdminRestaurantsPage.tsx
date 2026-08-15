@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
 import { Plus, Edit2, Trash2, MapPin, Store, Upload, Loader2, LocateFixed } from "lucide-react"
@@ -160,13 +160,46 @@ export default function AdminRestaurantsPage() {
   }, [])
 
   // --- Queries & Mutations ---
-  const { data: restaurants, isLoading } = useQuery<Restaurant[]>({
+  const { 
+    data: restaurantsData, 
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ["admin-restaurants"],
-    queryFn: async () => {
-      const { data } = await axios.get("/restaurants")
-      return data.data
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data } = await axios.get(`/restaurants?page=${pageParam}&size=12`)
+      return data.data as Restaurant[]
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || lastPage.length < 12) return undefined
+      return allPages.length
     },
   })
+
+  const restaurants = restaurantsData?.pages.flat() || []
+
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
 
   const createMutation = useMutation({
     mutationFn: async (newRestaurant: Partial<RestaurantFormData>) => {
@@ -444,7 +477,7 @@ export default function AdminRestaurantsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
-            {restaurants?.map((restaurant) => (
+            {restaurants.map((restaurant) => (
               <motion.div
                 key={restaurant.restaurantId}
                 layout
@@ -516,7 +549,7 @@ export default function AdminRestaurantsPage() {
                 </Card>
               </motion.div>
             ))}
-            {restaurants?.length === 0 && (
+            {restaurants.length === 0 && (
               <div className="col-span-full py-12 text-center text-slate-500">
                 No restaurants found. Click "Add Restaurant" to create one.
               </div>
@@ -524,6 +557,18 @@ export default function AdminRestaurantsPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Infinite Scroll Target */}
+      <div ref={observerTarget} className="flex w-full justify-center py-4">
+        {isFetchingNextPage ? (
+          <div className="flex items-center gap-2 text-slate-500">
+            <Loader2 className="animate-spin" size={16} />
+            <span className="text-sm">Loading more...</span>
+          </div>
+        ) : hasNextPage ? (
+          <div className="h-4" />
+        ) : null}
+      </div>
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
