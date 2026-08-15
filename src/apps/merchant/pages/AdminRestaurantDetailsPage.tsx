@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Plus, Edit2, Trash2, Image as ImageIcon, Upload, Loader2 } from "lucide-react"
 import axios from "@/lib/axios"
@@ -98,24 +98,60 @@ export default function AdminRestaurantDetailsPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Fetch Restaurant Details & Menus
-  const { data: restaurant, isLoading, isError } = useQuery<Restaurant>({
+  const { 
+    data: restaurantData, 
+    isLoading, 
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ["admin-restaurant-details", id],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       try {
-        const { data } = await axios.get(`/restaurants/${id}`)
+        const { data } = await axios.get(`/restaurants/${id}?page=${pageParam}&size=30`)
         return data.data
       } catch {
-        const { data } = await axios.get(`/restaurants/getRestaurantByID/${id}`)
+        const { data } = await axios.get(`/restaurants/getRestaurantByID/${id}?page=${pageParam}&size=30`)
         return data.data
       }
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const items = Array.isArray(lastPage) ? lastPage : (lastPage?.menu || lastPage?.menuItems || lastPage?.items || [])
+      if (!items || items.length < 30) return undefined
+      return allPages.length
     },
     enabled: !!id,
   })
 
-  // Extract menu items from restaurant object
-  const menus: MenuItem[] = Array.isArray(restaurant)
-    ? restaurant
-    : restaurant?.menu || restaurant?.menuItems || restaurant?.items || []
+  // Extract menu items from all pages
+  const restaurant = restaurantData?.pages[0] as Restaurant | undefined
+  const allPages = restaurantData?.pages || []
+  
+  const menus: MenuItem[] = allPages.flatMap(page => {
+    const pageData = page as any
+    return Array.isArray(pageData) ? pageData : (pageData?.menu || pageData?.menuItems || pageData?.items || [])
+  })
+
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   // Create Menu Mutation
   const createMutation = useMutation({
@@ -471,6 +507,18 @@ export default function AdminRestaurantDetailsPage() {
               </div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Infinite Scroll Target */}
+        <div ref={observerTarget} className="flex w-full justify-center py-4">
+          {isFetchingNextPage ? (
+            <div className="flex items-center gap-2 text-slate-500">
+              <Loader2 className="animate-spin" size={16} />
+              <span className="text-sm">Loading more...</span>
+            </div>
+          ) : hasNextPage ? (
+            <div className="h-4" />
+          ) : null}
         </div>
       </div>
 
