@@ -17,7 +17,7 @@ export default function RestaurantMenu() {
   const { data: menuItems, isLoading: isMenuLoading, error } = useRestaurantDetails(id)
 
   const isLoading = isRestaurantsLoading || isMenuLoading
-  const restaurantInfo = restaurants?.find((r: any) => r.restaurantId === id)
+  const restaurantInfo = restaurants?.find((r: any) => r.restaurantId === id) || (!Array.isArray(menuItems) ? menuItems : null)
 
   // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items)
@@ -108,7 +108,7 @@ export default function RestaurantMenu() {
         <div className="relative h-60 w-full overflow-hidden rounded-3xl">
           <img
             src={
-              restaurantInfo.image ||
+              restaurantInfo.image || restaurantInfo.restaurantImg ||
               "https://placehold.co/1200x400?text=Restaurant+Banner"
             }
             alt={restaurantInfo.name}
@@ -135,7 +135,7 @@ export default function RestaurantMenu() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {(Array.isArray(menuItems) ? menuItems : (menuItems?.menuItems || [])).map((item: any, index: number) => {
+          {(Array.isArray(menuItems) ? menuItems : (menuItems?.menu || menuItems?.menuItems || menuItems?.items || [])).map((item: any, index: number) => {
             const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index}`
             const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =
