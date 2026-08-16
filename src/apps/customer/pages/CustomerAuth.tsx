@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast, Toaster } from "sonner"
 import axios from "@/lib/axios"
 import { useAuthStore } from "@/store/useAuthStore"
+import BrandLogo from "@/imgs/brand_logo.png"
 
 // ─── VALIDATION SCHEMAS ───
 const loginSchema = z.object({
@@ -148,14 +149,9 @@ export default function CustomerAuth() {
       <div className="w-full max-w-md">
         {/* ─── LOGO ─── */}
         <div className="mb-8 flex justify-center">
-          <div className="group flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 font-serif text-xl font-bold tracking-tighter text-white shadow-lg shadow-zinc-900/20">
-              D
-            </div>
-            <span className="font-serif text-2xl font-semibold tracking-tight text-zinc-900">
-              deliv<span className="font-sans font-light text-zinc-400">x</span>
-            </span>
-          </div>
+          <Link to="/customer" className="group flex items-center">
+            <img src={BrandLogo} alt="Magway Logo" className="h-28 w-auto md:h-32 object-contain transition-transform group-hover:scale-110" />
+          </Link>
         </div>
 
         {/* ─── AUTH CARD ─── */}

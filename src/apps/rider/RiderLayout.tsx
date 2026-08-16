@@ -6,6 +6,7 @@ import { useThemeStore } from "@/store/useThemeStore"
 // ─── NEW IMPORTS FOR AUTH & GPS TRACKING ─────────────────────────────────────
 import { useAuthStore } from "@/store/useAuthStore" 
 import { useRiderLocation } from "./hooks/useRiderLocation"
+import BrandLogo from "@/imgs/brand_logo.png"
 
 // ─── Theme token maps ────────────────────────────────────────────────────────
 // Every colour decision lives here; the JSX just reads from these objects.
@@ -165,13 +166,9 @@ export default function RiderLayout() {
         {/* Logo */}
         <Link
           to="/rider"
-          className="group mb-8 flex flex-col items-center gap-1"
+          className="group mb-6 flex flex-col items-center mt-2"
         >
-          <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl font-serif text-xl font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}
-          >
-            D
-          </div>
+          <img src={BrandLogo} alt="Magway Logo" className="h-16 w-auto object-contain scale-150 transition-transform group-hover:scale-[1.7]" />
         </Link>
 
         {/* Rail icons */}
@@ -283,25 +280,9 @@ export default function RiderLayout() {
             transition: "background 0.35s ease",
           }}
         >
-          <Link to="/rider" className="group flex items-center gap-2.5">
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-lg font-serif text-base font-bold tracking-tighter transition-transform group-hover:rotate-6 ${isDark ? "bg-white text-zinc-900" : "bg-zinc-900 text-white"}`}
-            >
-              D
-            </div>
-            <div className="flex flex-col justify-center">
-              <span
-                className={`font-serif text-lg font-semibold tracking-tight ${isDark ? "text-white" : "text-zinc-900"} leading-none`}
-              >
-                deliv
-                <span className="font-sans font-light text-zinc-400">x</span>
-              </span>
-              <p
-                className={`text-[9px] font-semibold tracking-widest uppercase ${tk.logoSub} mt-1 leading-none`}
-              >
-                Rider
-              </p>
-            </div>
+          <Link to="/rider" className="group flex items-center gap-3">
+            <img src={BrandLogo} alt="Magway Logo" className="h-14 w-auto object-contain scale-125 transition-transform group-hover:scale-150" />
+            <span className={`rounded-md px-2 py-1 text-[9px] font-bold tracking-wider ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-blue-50 text-[#0f264a]'} uppercase`}>Rider</span>
           </Link>
 
           <div className="flex items-center gap-2">

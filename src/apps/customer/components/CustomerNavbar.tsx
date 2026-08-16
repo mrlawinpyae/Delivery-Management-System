@@ -21,6 +21,7 @@ import { useCartStore } from "../../../store/useCartStore"
 import { useEffect, useRef } from "react"
 import { useSearch } from "@/context/SearchContext"
 import { useAuthStore } from "@/store/useAuthStore"
+import BrandLogo from "@/imgs/brand_logo.png"
 
 export const useNavItems = () => {
   const cartItems = useCartStore((state) => state.items)
@@ -109,15 +110,12 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
             </motion.div>
           )}
         </AnimatePresence>
-        <Link to="/customer" className="group flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 font-serif text-base font-bold tracking-tighter text-white transition-transform group-hover:rotate-6">
-            D
+        <Link to="/customer" className="group flex items-center gap-2 md:gap-3">
+          <img src={BrandLogo} alt="Magway Logo" className="h-12 w-auto md:h-16 md:w-auto object-contain scale-110 transition-transform group-hover:scale-125" />
+          <div className="flex flex-col justify-center">
+            <span className="text-xl md:text-2xl font-bold tracking-tight text-[#0f264a] leading-none">Magway</span>
+            <span className="text-[10px] md:text-[11px] font-bold tracking-[0.15em] text-[#0f264a] mt-1 leading-none uppercase">Food Delivery</span>
           </div>
-
-          <span className="font-serif text-lg font-semibold tracking-tight text-zinc-900">
-            deliv
-            <span className="font-sans font-light text-zinc-400">x</span>
-          </span>
         </Link>
         <nav className="hidden items-center gap-1 rounded-full border border-zinc-200/40 bg-zinc-100/60 p-1.5 md:flex">
           {navItems.map((item) => {

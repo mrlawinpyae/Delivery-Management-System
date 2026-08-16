@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChevronDown, Search, UserPlus } from "lucide-react"
 import { useSearch } from "@/context/SearchContext"
 import { useAuthStore } from "@/store/useAuthStore"
+import BrandLogo from "@/imgs/brand_logo.png"
 
 export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
   const location = useLocation()
@@ -55,12 +56,11 @@ export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
       {/* 1. Top Header: Logo + Profile */}
       <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-6 backdrop-blur-md md:hidden">
         <Link to="/customer" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 font-serif font-bold text-white">
-            D
+          <img src={BrandLogo} alt="Magway Logo" className="h-10 w-auto md:h-12 object-contain scale-110 transition-transform hover:scale-125" />
+          <div className="flex flex-col justify-center">
+            <span className="text-lg font-bold tracking-tight text-[#0f264a] leading-none">Magway</span>
+            <span className="text-[8px] font-bold tracking-[0.15em] text-[#0f264a] mt-0.5 leading-none uppercase">Food Delivery</span>
           </div>
-          <span className="font-serif text-lg font-semibold">
-            deliv<span className="font-light text-zinc-400">x</span>
-          </span>
         </Link>
 
         {/* Right Section: Search & Profile */}
