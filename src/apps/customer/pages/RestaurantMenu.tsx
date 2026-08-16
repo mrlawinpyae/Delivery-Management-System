@@ -135,7 +135,7 @@ export default function RestaurantMenu() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {(menuItems || []).map((item: any, index: number) => {
+          {(Array.isArray(menuItems) ? menuItems : (menuItems?.menuItems || [])).map((item: any, index: number) => {
             const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index}`
             const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =

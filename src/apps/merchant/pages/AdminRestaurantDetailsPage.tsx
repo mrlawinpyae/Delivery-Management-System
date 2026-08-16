@@ -363,7 +363,7 @@ export default function AdminRestaurantDetailsPage() {
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 rounded-full bg-white shadow-sm cursor-pointer"
+            className="h-9 w-9 cursor-pointer rounded-full bg-white shadow-sm"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -376,7 +376,10 @@ export default function AdminRestaurantDetailsPage() {
       {/* Restaurant Info Banner */}
       <div className="relative h-48 w-full overflow-hidden rounded-3xl shadow-sm">
         <img
-          src={restaurant.image || "https://placehold.co/1200x400?text=Banner"}
+          src={
+            restaurant.restaurantImg ||
+            "https://placehold.co/1200x400?text=Banner"
+          }
           alt={restaurant.name}
           className="h-full w-full object-cover"
         />
@@ -478,7 +481,7 @@ export default function AdminRestaurantDetailsPage() {
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-9 w-9 text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer"
+                            className="h-9 w-9 cursor-pointer text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
                             onClick={() => handleOpenModal(item)}
                             title="Edit Menu Item"
                           >
@@ -487,7 +490,7 @@ export default function AdminRestaurantDetailsPage() {
                           <Button
                             size="icon"
                             variant="outline"
-                            className="h-9 w-9 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                            className="h-9 w-9 cursor-pointer text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
                             onClick={() => setMenuToDelete(item)}
                             title="Delete Menu Item"
                           >
