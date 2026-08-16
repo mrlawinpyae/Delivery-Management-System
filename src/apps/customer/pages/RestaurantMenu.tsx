@@ -1,9 +1,9 @@
 import { useParams, Link, useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, AlertCircle } from "lucide-react"
+import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react"
 
-import { useRestaurantDetails, useRestaurants } from "../hooks/useRestaurants"
+import { useInfiniteRestaurantDetails, useRestaurants } from "../hooks/useRestaurants"
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,16 +14,48 @@ export default function RestaurantMenu() {
 
   // Fetch both the restaurant list (to get details) and the menu items for this restaurant
   const { data: restaurants, isLoading: isRestaurantsLoading } = useRestaurants()
-  const { data: menuItems, isLoading: isMenuLoading, error } = useRestaurantDetails(id)
+  const { 
+    data: restaurantData, 
+    isLoading: isMenuLoading, 
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteRestaurantDetails(id, 45)
 
   const isLoading = isRestaurantsLoading || isMenuLoading
-  const restaurantInfo = restaurants?.find((r: any) => r.restaurantId === id) || (!Array.isArray(menuItems) ? menuItems : null)
+  const firstPage = restaurantData?.pages?.[0]
+  const restaurantInfo = restaurants?.find((r: any) => r.restaurantId === id) || (!Array.isArray(firstPage) ? firstPage : null)
+  
+  const allPages = restaurantData?.pages || []
+  const menuItems = allPages.flatMap((page: any) => {
+    return Array.isArray(page) ? page : (page?.menu || page?.menuItems || page?.items || [])
+  })
 
   // Zustand Cart Store
   const cartItems = useCartStore((state) => state.items)
   const addToCart = useCartStore((state) => state.addToCart)
 
   const [seconds, setSeconds] = useState(3)
+
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   // Auto-redirect logic for error
   useEffect(() => {
@@ -135,7 +167,7 @@ export default function RestaurantMenu() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {(Array.isArray(menuItems) ? menuItems : (menuItems?.menu || menuItems?.menuItems || menuItems?.items || [])).map((item: any, index: number) => {
+          {menuItems.map((item: any, index: number) => {
             const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index}`
             const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =
@@ -213,6 +245,24 @@ export default function RestaurantMenu() {
               </motion.div>
             )
           })}
+        </div>
+
+        {/* Infinite Scroll Target */}
+        <div ref={observerTarget} className="flex w-full justify-center py-8">
+          {isFetchingNextPage ? (
+            <div className="flex items-center gap-2 text-zinc-400">
+              <Loader2 className="animate-spin" size={20} />
+              <span className="text-sm font-medium">Loading more items...</span>
+            </div>
+          ) : hasNextPage ? (
+            <div className="h-10" />
+          ) : (
+            menuItems.length > 0 && (
+              <div className="py-4 text-center text-sm text-zinc-500">
+                You've reached the end of the menu.
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>

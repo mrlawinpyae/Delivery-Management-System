@@ -48,3 +48,27 @@ export function useRestaurantDetails(restaurantId: string | undefined) {
     enabled: !!restaurantId,
   })
 }
+
+// 3. Get Infinite Restaurant Menu Hook
+export function useInfiniteRestaurantDetails(restaurantId: string | undefined, size: number = 45) {
+  return useInfiniteQuery({
+    queryKey: ["restaurant", "infinite", restaurantId],
+    queryFn: async ({ pageParam = 0 }) => {
+      try {
+        const { data } = await axios.get(`/restaurants/${restaurantId}?page=${pageParam}&size=${size}`)
+        return data.data
+      } catch {
+        // Fallback endpoint if needed
+        const { data } = await axios.get(`/restaurants/getRestaurantByID/${restaurantId}?page=${pageParam}&size=${size}`)
+        return data.data
+      }
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const items = Array.isArray(lastPage) ? lastPage : (lastPage?.menu || lastPage?.menuItems || lastPage?.items || [])
+      if (!items || items.length < size) return undefined
+      return allPages.length
+    },
+    enabled: !!restaurantId,
+  })
+}
