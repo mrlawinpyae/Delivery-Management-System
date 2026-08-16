@@ -1,11 +1,24 @@
 import { useState, useRef, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, Plus, Edit2, Trash2, Image as ImageIcon, Upload, Loader2 } from "lucide-react"
+import {
+  ArrowLeft,
+  Plus,
+  Edit2,
+  Trash2,
+  Image as ImageIcon,
+  Upload,
+  Loader2,
+} from "lucide-react"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
-
+import menuLogo from "../../../imgs/menu_logo.jpg"
+import restLogo from "../../../imgs/resturant_logo.jpg"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -98,27 +111,33 @@ export default function AdminRestaurantDetailsPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Fetch Restaurant Details & Menus
-  const { 
-    data: restaurantData, 
-    isLoading, 
+  const {
+    data: restaurantData,
+    isLoading,
     isError,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["admin-restaurant-details", id],
     queryFn: async ({ pageParam = 0 }) => {
       try {
-        const { data } = await axios.get(`/restaurants/${id}?page=${pageParam}&size=30`)
+        const { data } = await axios.get(
+          `/restaurants/${id}?page=${pageParam}&size=30`
+        )
         return data.data
       } catch {
-        const { data } = await axios.get(`/restaurants/getRestaurantByID/${id}?page=${pageParam}&size=30`)
+        const { data } = await axios.get(
+          `/restaurants/getRestaurantByID/${id}?page=${pageParam}&size=30`
+        )
         return data.data
       }
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
-      const items = Array.isArray(lastPage) ? lastPage : (lastPage?.menu || lastPage?.menuItems || lastPage?.items || [])
+      const items = Array.isArray(lastPage)
+        ? lastPage
+        : lastPage?.menu || lastPage?.menuItems || lastPage?.items || []
       if (!items || items.length < 30) return undefined
       return allPages.length
     },
@@ -128,17 +147,19 @@ export default function AdminRestaurantDetailsPage() {
   // Extract menu items from all pages
   const restaurant = restaurantData?.pages[0] as Restaurant | undefined
   const allPages = restaurantData?.pages || []
-  
-  const menus: MenuItem[] = allPages.flatMap(page => {
+
+  const menus: MenuItem[] = allPages.flatMap((page) => {
     const pageData = page as any
-    return Array.isArray(pageData) ? pageData : (pageData?.menu || pageData?.menuItems || pageData?.items || [])
+    return Array.isArray(pageData)
+      ? pageData
+      : pageData?.menu || pageData?.menuItems || pageData?.items || []
   })
 
   const observerTarget = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
         }
@@ -160,30 +181,47 @@ export default function AdminRestaurantDetailsPage() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-restaurant-details", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["admin-restaurant-details", id],
+      })
       queryClient.invalidateQueries({ queryKey: ["restaurant", id] })
       toast.success("Menu item created successfully")
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create menu item")
+      toast.error(
+        error?.response?.data?.message || "Failed to create menu item"
+      )
     },
   })
 
   // Update Menu Mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ itemId, payload }: { itemId: string; payload: any }) => {
-      const { data } = await axios.put(`/restaurants/${id}/menu/${itemId}`, payload)
+    mutationFn: async ({
+      itemId,
+      payload,
+    }: {
+      itemId: string
+      payload: any
+    }) => {
+      const { data } = await axios.put(
+        `/restaurants/${id}/menu/${itemId}`,
+        payload
+      )
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-restaurant-details", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["admin-restaurant-details", id],
+      })
       queryClient.invalidateQueries({ queryKey: ["restaurant", id] })
       toast.success("Menu item updated successfully")
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update menu item")
+      toast.error(
+        error?.response?.data?.message || "Failed to update menu item"
+      )
     },
   })
 
@@ -193,13 +231,17 @@ export default function AdminRestaurantDetailsPage() {
       await axios.delete(`/restaurants/${id}/menu/${itemId}`)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-restaurant-details", id] })
+      queryClient.invalidateQueries({
+        queryKey: ["admin-restaurant-details", id],
+      })
       queryClient.invalidateQueries({ queryKey: ["restaurant", id] })
       toast.success("Menu item deleted successfully")
       setMenuToDelete(null)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete menu item")
+      toast.error(
+        error?.response?.data?.message || "Failed to delete menu item"
+      )
     },
   })
 
@@ -235,7 +277,11 @@ export default function AdminRestaurantDetailsPage() {
       return
     }
 
-    if (formData.price === "" || formData.price === null || formData.price === undefined) {
+    if (
+      formData.price === "" ||
+      formData.price === null ||
+      formData.price === undefined
+    ) {
       toast.error("Please enter a price.")
       return
     }
@@ -261,7 +307,8 @@ export default function AdminRestaurantDetailsPage() {
     }
 
     if (editingMenu) {
-      const itemId = editingMenu.itemId || editingMenu.id || editingMenu._id || ""
+      const itemId =
+        editingMenu.itemId || editingMenu.id || editingMenu._id || ""
       updateMutation.mutate({ itemId, payload })
     } else {
       createMutation.mutate(payload)
@@ -270,7 +317,8 @@ export default function AdminRestaurantDetailsPage() {
 
   const confirmDelete = () => {
     if (!menuToDelete) return
-    const itemId = menuToDelete.itemId || menuToDelete.id || menuToDelete._id || ""
+    const itemId =
+      menuToDelete.itemId || menuToDelete.id || menuToDelete._id || ""
     deleteMutation.mutate(itemId)
   }
 
@@ -314,11 +362,11 @@ export default function AdminRestaurantDetailsPage() {
       const uploadedUrl =
         typeof response.data === "string"
           ? response.data
-          : (response.data?.url ||
-             response.data?.data?.url ||
-             response.data?.img ||
-             response.data?.image ||
-             "")
+          : response.data?.url ||
+            response.data?.data?.url ||
+            response.data?.img ||
+            response.data?.image ||
+            ""
 
       if (uploadedUrl) {
         setFormData((prev) => ({ ...prev, image: uploadedUrl }))
@@ -338,16 +386,18 @@ export default function AdminRestaurantDetailsPage() {
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-6">
-        <div className="h-10 w-32 bg-slate-200 rounded"></div>
-        <div className="h-48 bg-slate-200 rounded-3xl"></div>
+        <div className="h-10 w-32 rounded bg-slate-200"></div>
+        <div className="h-48 rounded-3xl bg-slate-200"></div>
       </div>
     )
   }
 
   if (isError || !restaurant) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 space-y-4">
-        <h2 className="text-xl font-bold text-slate-800">Restaurant not found</h2>
+      <div className="flex flex-col items-center justify-center space-y-4 p-12">
+        <h2 className="text-xl font-bold text-slate-800">
+          Restaurant not found
+        </h2>
         <Link to="/admin/restaurants">
           <Button variant="outline">Back to Restaurants</Button>
         </Link>
@@ -376,10 +426,7 @@ export default function AdminRestaurantDetailsPage() {
       {/* Restaurant Info Banner */}
       <div className="relative h-48 w-full overflow-hidden rounded-3xl shadow-sm">
         <img
-          src={
-            restaurant.restaurantImg ||
-            "https://placehold.co/1200x400?text=Banner"
-          }
+          src={restaurant.restaurantImg || restLogo}
           alt={restaurant.name}
           className="h-full w-full object-cover"
         />
@@ -428,17 +475,11 @@ export default function AdminRestaurantDetailsPage() {
                 >
                   <Card className="group flex h-full flex-col gap-0 overflow-hidden rounded-2xl bg-white p-0 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md hover:ring-slate-300">
                     <div className="relative h-48 w-full shrink-0 overflow-hidden bg-slate-50">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
-                          <ImageIcon className="h-8 w-8" />
-                        </div>
-                      )}
+                      <img
+                        src={item.image||menuLogo}
+                        alt={item.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
 
                       {!item.isAvailable && (
                         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
@@ -779,4 +820,3 @@ export default function AdminRestaurantDetailsPage() {
     </div>
   )
 }
-

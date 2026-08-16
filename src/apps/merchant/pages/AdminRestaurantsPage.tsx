@@ -1,16 +1,25 @@
 import { useState, useRef, useCallback, useEffect } from "react"
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { Link } from "react-router-dom"
-import { Plus, Edit2, Trash2, MapPin, Store, Upload, Loader2, LocateFixed } from "lucide-react"
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  MapPin,
+  Store,
+  Upload,
+  Loader2,
+  LocateFixed,
+} from "lucide-react"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
-import {
-  GoogleMap,
-  useLoadScript,
-  OverlayView,
-} from "@react-google-maps/api"
-
+import { GoogleMap, useLoadScript, OverlayView } from "@react-google-maps/api"
+import restLogo from "../../../imgs/resturant_logo.jpg"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -139,13 +148,18 @@ const defaultFormData: RestaurantFormData = {
 export default function AdminRestaurantsPage() {
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null)
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(
+    null
+  )
   const [formData, setFormData] = useState<RestaurantFormData>(defaultFormData)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
-  const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null)
-  
+  const [restaurantToDelete, setRestaurantToDelete] =
+    useState<Restaurant | null>(null)
+
   const mapRef = useRef<google.maps.Map | null>(null)
-  const [mapPosition, setMapPosition] = useState<{ lat: number; lng: number }>(MAGWAY_CENTER)
+  const [mapPosition, setMapPosition] = useState<{ lat: number; lng: number }>(
+    MAGWAY_CENTER
+  )
   const [locating, setLocating] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const skipReverseGeocodeRef = useRef(false)
@@ -161,12 +175,12 @@ export default function AdminRestaurantsPage() {
   }, [])
 
   // --- Queries & Mutations ---
-  const { 
-    data: restaurantsData, 
+  const {
+    data: restaurantsData,
     isLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["admin-restaurants"],
     queryFn: async ({ pageParam = 0 }) => {
@@ -186,7 +200,7 @@ export default function AdminRestaurantsPage() {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
         }
@@ -201,7 +215,6 @@ export default function AdminRestaurantsPage() {
     return () => observer.disconnect()
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
-
   const createMutation = useMutation({
     mutationFn: async (newRestaurant: Partial<RestaurantFormData>) => {
       const { data } = await axios.post("/restaurants", newRestaurant)
@@ -213,22 +226,30 @@ export default function AdminRestaurantsPage() {
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      const resData = error?.response?.data;
+      const resData = error?.response?.data
       if (resData?.message) {
-        toast.error(resData.message);
-      } else if (resData?.error && typeof resData.error === 'string') {
-        toast.error(resData.error);
-      } else if (resData && typeof resData === 'object') {
-        const msgs = Object.values(resData).filter(v => typeof v === 'string').join(', ');
-        toast.error(msgs || "Failed to create restaurant");
+        toast.error(resData.message)
+      } else if (resData?.error && typeof resData.error === "string") {
+        toast.error(resData.error)
+      } else if (resData && typeof resData === "object") {
+        const msgs = Object.values(resData)
+          .filter((v) => typeof v === "string")
+          .join(", ")
+        toast.error(msgs || "Failed to create restaurant")
       } else {
-        toast.error("Failed to create restaurant");
+        toast.error("Failed to create restaurant")
       }
     },
   })
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<RestaurantFormData> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<RestaurantFormData>
+    }) => {
       const response = await axios.put(`/restaurants/${id}`, data)
       return response.data
     },
@@ -238,16 +259,18 @@ export default function AdminRestaurantsPage() {
       setIsModalOpen(false)
     },
     onError: (error: any) => {
-      const resData = error?.response?.data;
+      const resData = error?.response?.data
       if (resData?.message) {
-        toast.error(resData.message);
-      } else if (resData?.error && typeof resData.error === 'string') {
-        toast.error(resData.error);
-      } else if (resData && typeof resData === 'object') {
-        const msgs = Object.values(resData).filter(v => typeof v === 'string').join(', ');
-        toast.error(msgs || "Failed to update restaurant");
+        toast.error(resData.message)
+      } else if (resData?.error && typeof resData.error === "string") {
+        toast.error(resData.error)
+      } else if (resData && typeof resData === "object") {
+        const msgs = Object.values(resData)
+          .filter((v) => typeof v === "string")
+          .join(", ")
+        toast.error(msgs || "Failed to update restaurant")
       } else {
-        toast.error("Failed to update restaurant");
+        toast.error("Failed to update restaurant")
       }
     },
   })
@@ -261,7 +284,9 @@ export default function AdminRestaurantsPage() {
       toast.success("Restaurant deleted successfully")
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete restaurant")
+      toast.error(
+        error?.response?.data?.message || "Failed to delete restaurant"
+      )
     },
   })
 
@@ -269,13 +294,25 @@ export default function AdminRestaurantsPage() {
   const handleOpenModal = (restaurant?: Restaurant | any) => {
     if (restaurant) {
       setEditingRestaurant(restaurant)
-      const latVal = Number(restaurant.latitude ?? restaurant.lat) || MAGWAY_CENTER.lat
-      const lngVal = Number(restaurant.longitude ?? restaurant.lng ?? restaurant.long) || MAGWAY_CENTER.lng
-      
+      const latVal =
+        Number(restaurant.latitude ?? restaurant.lat) || MAGWAY_CENTER.lat
+      const lngVal =
+        Number(restaurant.longitude ?? restaurant.lng ?? restaurant.long) ||
+        MAGWAY_CENTER.lng
+
       setFormData({
         name: restaurant.name || restaurant.restaurantName || "",
-        phone: restaurant.phone || restaurant.phoneNumber || restaurant.phone_number || "",
-        image: restaurant.image || restaurant.img || restaurant.photo || restaurant.imageUrl || "",
+        phone:
+          restaurant.phone ||
+          restaurant.phoneNumber ||
+          restaurant.phone_number ||
+          "",
+        image:
+          restaurant.image ||
+          restaurant.img ||
+          restaurant.photo ||
+          restaurant.imageUrl ||
+          "",
         address: restaurant.address || restaurant.location || "",
         latitude: latVal,
         longitude: lngVal,
@@ -303,7 +340,8 @@ export default function AdminRestaurantsPage() {
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${mapPosition.lat}&lon=${mapPosition.lng}&zoom=18&addressdetails=1`
         )
         const data = await res.json()
-        const generatedAddress = data.display_name || "Selected Location, Magway"
+        const generatedAddress =
+          data.display_name || "Selected Location, Magway"
         setFormData((prev) => ({
           ...prev,
           address: generatedAddress,
@@ -372,7 +410,7 @@ export default function AdminRestaurantsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     let finalPhone = formData.phone
     if (!finalPhone || finalPhone === "+95") {
       finalPhone = ""
@@ -394,7 +432,10 @@ export default function AdminRestaurantsPage() {
     const payload = { ...formData, phone: finalPhone }
 
     if (editingRestaurant) {
-      const restId = editingRestaurant.restaurantId || (editingRestaurant as any)._id || (editingRestaurant as any).id
+      const restId =
+        editingRestaurant.restaurantId ||
+        (editingRestaurant as any)._id ||
+        (editingRestaurant as any).id
       updateMutation.mutate({ id: restId, data: payload })
     } else {
       createMutation.mutate(payload)
@@ -403,7 +444,10 @@ export default function AdminRestaurantsPage() {
 
   const confirmDelete = () => {
     if (!restaurantToDelete) return
-    const restId = restaurantToDelete.restaurantId || (restaurantToDelete as any)._id || (restaurantToDelete as any).id
+    const restId =
+      restaurantToDelete.restaurantId ||
+      (restaurantToDelete as any)._id ||
+      (restaurantToDelete as any).id
     deleteMutation.mutate(restId, {
       onSettled: () => setRestaurantToDelete(null),
     })
@@ -439,11 +483,11 @@ export default function AdminRestaurantsPage() {
       const uploadedUrl =
         typeof response.data === "string"
           ? response.data
-          : (response.data?.url ||
-             response.data?.data?.url ||
-             response.data?.img ||
-             response.data?.image ||
-             "")
+          : response.data?.url ||
+            response.data?.data?.url ||
+            response.data?.img ||
+            response.data?.image ||
+            ""
 
       if (uploadedUrl) {
         setFormData((prev) => ({ ...prev, image: uploadedUrl }))
@@ -462,7 +506,12 @@ export default function AdminRestaurantsPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    const newValue = name === "latitude" || name === "longitude" ? (value === "" ? "" : Number(value)) : value
+    const newValue =
+      name === "latitude" || name === "longitude"
+        ? value === ""
+          ? ""
+          : Number(value)
+        : value
 
     setFormData((prev) => ({
       ...prev,
@@ -473,19 +522,19 @@ export default function AdminRestaurantsPage() {
       const lat = Number(value)
       if (!isNaN(lat)) {
         skipReverseGeocodeRef.current = true
-        setMapPosition(prev => {
+        setMapPosition((prev) => {
           const newPos = { lat, lng: prev.lng }
           mapRef.current?.panTo(newPos)
           return newPos
         })
       }
     }
-    
+
     if (name === "longitude" && value !== "") {
       const lng = Number(value)
       if (!isNaN(lng)) {
         skipReverseGeocodeRef.current = true
-        setMapPosition(prev => {
+        setMapPosition((prev) => {
           const newPos = { lat: prev.lat, lng }
           mapRef.current?.panTo(newPos)
           return newPos
@@ -510,10 +559,7 @@ export default function AdminRestaurantsPage() {
           onClick={() => handleOpenModal()}
           className="group h-9 rounded-md bg-slate-900 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
         >
-          <Plus
-            className="mr-2 h-4 w-4"
-            strokeWidth={2}
-          />
+          <Plus className="mr-2 h-4 w-4" strokeWidth={2} />
           Add Restaurant
         </Button>
       </div>
@@ -547,14 +593,11 @@ export default function AdminRestaurantsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl bg-white p-0 shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+                <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-slate-200/60 bg-white p-0 shadow-sm transition-all hover:shadow-md">
                   {/* Image Header */}
                   <div className="relative h-48 w-full shrink-0 bg-slate-50">
                     <img
-                      src={
-                        restaurant.image ||
-                        "https://placehold.co/600x400?text=No+Image"
-                      }
+                      src={restaurant.image || restLogo}
                       alt={restaurant.name}
                       className="h-full w-full object-cover"
                     />
@@ -598,7 +641,7 @@ export default function AdminRestaurantsPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-9 w-9 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                          className="h-9 w-9 text-rose-500 hover:bg-rose-50 hover:text-rose-600"
                           onClick={() => setRestaurantToDelete(restaurant)}
                           title="Delete Restaurant"
                         >
@@ -634,7 +677,11 @@ export default function AdminRestaurantsPage() {
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto rounded-xl border border-slate-200/60 bg-white p-5 shadow-lg sm:max-w-[520px]">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4"
+            noValidate
+          >
             <DialogHeader className="border-b border-slate-100 pb-1">
               <DialogTitle className="text-lg font-bold text-slate-900">
                 {editingRestaurant ? "Edit Restaurant" : "Add Restaurant"}

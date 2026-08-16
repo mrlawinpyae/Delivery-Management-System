@@ -9,6 +9,7 @@ import { useInfiniteRestaurants } from "../hooks/useRestaurants"
 // Shadcn UI Components
 import { Card, CardContent } from "@/components/ui/card"
 import { useSearch } from "@/context/SearchContext"
+import restLogo from '../../../imgs/resturant_logo.jpg'
 
 export default function BrowseRestaurants() {
   const { searchTerm } = useSearch()
@@ -75,10 +76,7 @@ export default function BrowseRestaurants() {
                     <Card className="group relative h-80 overflow-hidden rounded-3xl border-0 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)]">
                       <div className="absolute inset-0 h-full w-full bg-zinc-900">
                         <img
-                          src={
-                            shop.image ||
-                            "https://placehold.co/600x800?text=Premium+Kitchen"
-                          }
+                          src={shop.image || restLogo}
                           alt={shop.name}
                           className="h-full w-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-110"
                         />
@@ -127,7 +125,9 @@ export default function BrowseRestaurants() {
           {isFetchingNextPage ? (
             <div className="flex items-center gap-2 text-zinc-400">
               <Loader2 className="animate-spin" size={20} />
-              <span className="text-sm font-medium">Loading more kitchens...</span>
+              <span className="text-sm font-medium">
+                Loading more kitchens...
+              </span>
             </div>
           ) : hasNextPage ? (
             <div className="h-10" />

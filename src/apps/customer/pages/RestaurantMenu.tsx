@@ -2,7 +2,8 @@ import { useParams, Link, useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react"
-
+import restLogo from "../../../imgs/resturant_logo.jpg"
+import menuLogo from "../../../imgs/menu_logo.jpg"
 import { useInfiniteRestaurantDetails, useRestaurants } from "../hooks/useRestaurants"
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
@@ -140,8 +141,7 @@ export default function RestaurantMenu() {
         <div className="relative h-60 w-full overflow-hidden rounded-3xl">
           <img
             src={
-              restaurantInfo.image || restaurantInfo.restaurantImg ||
-              "https://placehold.co/1200x400?text=Restaurant+Banner"
+              restaurantInfo.image || restaurantInfo.restaurantImg || restLogo
             }
             alt={restaurantInfo.name}
             className="h-full w-full object-cover"
@@ -168,7 +168,8 @@ export default function RestaurantMenu() {
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {menuItems.map((item: any, index: number) => {
-            const itemId = item.itemId || item._id || item.id || `menu-item-${id}-${index}`
+            const itemId =
+              item.itemId || item._id || item.id || `menu-item-${id}-${index}`
             const currentQty = cartItems[itemId]?.quantity || 0
             const isAvailable =
               item.isAvailable !== false && item.available !== false
@@ -184,7 +185,7 @@ export default function RestaurantMenu() {
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
                   <img
                     loading="lazy"
-                    src={item.image || "https://placehold.co/400x300?text=Food"}
+                    src={item.image || menuLogo}
                     alt={item.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
