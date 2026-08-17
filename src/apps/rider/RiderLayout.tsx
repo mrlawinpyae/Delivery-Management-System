@@ -7,7 +7,7 @@ import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore" 
 import { useRiderLocation } from "./hooks/useRiderLocation"
 import BrandLogo from "@/imgs/brand_logo.png"
-
+import BrandcolorLogo from "@/imgs/brand_color_logo.png"
 // ─── Theme token maps ────────────────────────────────────────────────────────
 // Every colour decision lives here; the JSX just reads from these objects.
 const tokens = {
@@ -166,9 +166,13 @@ export default function RiderLayout() {
         {/* Logo */}
         <Link
           to="/rider"
-          className="group mb-6 flex flex-col items-center mt-2"
+          className="group mt-2 mb-6 flex flex-col items-center"
         >
-          <img src={BrandLogo} alt="Magway Logo" className="h-16 w-auto object-contain scale-150 transition-transform group-hover:scale-[1.7]" />
+          <img
+            src={isDark ? BrandcolorLogo : BrandLogo}
+            alt="Magway Logo"
+            className="h-7 w-auto scale-150 object-contain transition-transform group-hover:scale-[1.7]"
+          />
         </Link>
 
         {/* Rail icons */}
@@ -281,8 +285,16 @@ export default function RiderLayout() {
           }}
         >
           <Link to="/rider" className="group flex items-center gap-3">
-            <img src={BrandLogo} alt="Magway Logo" className="h-14 w-auto object-contain scale-125 transition-transform group-hover:scale-150" />
-            <span className={`rounded-md px-2 py-1 text-[9px] font-bold tracking-wider ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-blue-50 text-[#0f264a]'} uppercase`}>Rider</span>
+            <img
+              src={isDark ? BrandcolorLogo : BrandLogo}
+              alt="Magway Logo"
+              className="h-8 w-auto scale-125 object-contain transition-transform group-hover:scale-150"
+            />
+            <span
+              className={`rounded-md px-2 py-1 text-[9px] font-bold tracking-wider ${isDark ? "bg-slate-800 text-slate-300" : "bg-blue-50 text-[#0f264a]"} uppercase`}
+            >
+              Rider
+            </span>
           </Link>
 
           <div className="flex items-center gap-2">
