@@ -225,7 +225,10 @@ async function fetchRoute(
   return [start, end]
 }
 
+import { useTranslation } from "@/hooks/useTranslation"
+
 export default function RiderTaskDetails() {
+  const { t } = useTranslation()
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
   const user = useAuthStore((s) => s.user)
@@ -512,12 +515,12 @@ export default function RiderTaskDetails() {
     return (
       <div className="flex flex-col items-center justify-center h-64 cursor-pointer">
         <Compass className="h-8 w-8 text-slate-500 mb-2" />
-        <p className="text-slate-500">Order not found.</p>
+        <p className="text-slate-500">{t("rider.taskDetails.orderNotFound")}</p>
         <button
           onClick={() => navigate("/rider")}
           className="mt-4 text-sky-500 underline "
         >
-          Back to Tasks
+          {t("rider.taskDetails.backToTasks")}
         </button>
       </div>
     )
@@ -586,7 +589,7 @@ export default function RiderTaskDetails() {
           }`}
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Tasks
+          {t("rider.taskDetails.backToTasks")}
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -605,7 +608,7 @@ export default function RiderTaskDetails() {
                     className={`h-5 w-5 ${isDark ? "text-cyan-400" : "text-sky-600"}`}
                   />
                   <span className="text-sm font-bold uppercase tracking-wider">
-                    Route Visualization
+                    {t("rider.taskDetails.routeVisualization")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -613,7 +616,7 @@ export default function RiderTaskDetails() {
                   <button
                     onClick={handleUseCurrentLocation}
                     disabled={locating}
-                    title="Use Current Location"
+                    title={t("rider.taskDetails.myLocation")}
                     className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-all active:scale-95 disabled:opacity-60 disabled:pointer-events-none ${
                       isDark
                         ? "border-slate-700 bg-slate-800 text-cyan-400 hover:bg-slate-700"
@@ -625,7 +628,7 @@ export default function RiderTaskDetails() {
                     ) : (
                       <LocateFixed className="h-3.5 w-3.5" />
                     )}
-                    {locating ? "Locating..." : "My Location"}
+                    {locating ? t("rider.taskDetails.locating") : t("rider.taskDetails.myLocation")}
                   </button>
                   {order.status !== "PREPARING" && (
                     <span
@@ -753,7 +756,7 @@ export default function RiderTaskDetails() {
                                     color: "#f59e0b",
                                   }}
                                 >
-                                  Pickup
+                                  {t("rider.taskDetails.pickup")}
                                   {mapData.pickups.length > 1
                                     ? ` #${idx + 1}`
                                     : ""}
@@ -894,7 +897,7 @@ export default function RiderTaskDetails() {
               <div className="mb-6">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                    Job Specifications
+                    {t("rider.taskDetails.jobSpecifications")}
                   </h4>
                   <span
                     className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${statusColors[order.status]}`}
@@ -922,7 +925,7 @@ export default function RiderTaskDetails() {
                       </div>
                       <div>
                         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                          Pickup Location
+                          {t("rider.taskDetails.pickupLocation")}
                           {(order.pickupLocations || []).length > 1
                             ? ` #${idx + 1}`
                             : ""}
@@ -946,7 +949,7 @@ export default function RiderTaskDetails() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                        Delivery Destination
+                        {t("rider.taskDetails.deliveryDestination")}
                       </p>
                       <p className="text-sm font-bold leading-tight mt-0.5">
                         {(order as any).deliveryDestinationAddress || order.deliveryLocation?.address || (order as any).deliveryAddress || "N/A"}
@@ -971,7 +974,7 @@ export default function RiderTaskDetails() {
                     />
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
-                        Recipient
+                        {t("rider.taskDetails.recipient")}
                       </p>
                       <p className="text-base font-bold mt-0.5">
                         {(order as any).recipient?.name || order.customer?.name || (order as any).customerName || "Customer"}
@@ -994,7 +997,7 @@ export default function RiderTaskDetails() {
                 {/* Itemized breakdown */}
                 <div>
                   <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Receipt Summary
+                    {t("rider.taskDetails.receiptSummary")}
                   </h5>
                   <div
                     className={`rounded-2xl p-4 space-y-3 ${isDark ? "bg-slate-900/50" : "bg-slate-50"}`}
@@ -1036,7 +1039,7 @@ export default function RiderTaskDetails() {
                       </div>
                     )}
                     <div className="border-t border-slate-700/10 pt-3 mt-1 flex items-center justify-between text-sm font-bold">
-                      <span>Total Cash Collect</span>
+                      <span>{t("rider.taskDetails.totalCashCollect")}</span>
                       <span
                         className={`text-base font-bold ${isDark ? "text-cyan-400" : "text-sky-600"}`}
                       >
@@ -1057,11 +1060,11 @@ export default function RiderTaskDetails() {
                       {updating === (order._id || (order as any).id || (order as any).orderId) ? (
                         <>
                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Updating...
+                          {t("rider.taskDetails.updating")}
                         </>
                       ) : (
                         <>
-                          Complete Delivery
+                          {t("rider.taskDetails.markAsDelivered")}
                           <CheckCircle className="h-4 w-4" />
                         </>
                       )}

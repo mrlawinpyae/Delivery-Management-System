@@ -50,7 +50,10 @@ interface Order {
   items: OrderItem[]
 }
 
+import { useTranslation } from "@/hooks/useTranslation"
+
 export default function RiderTasks() {
+  const { t } = useTranslation()
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
 
@@ -225,23 +228,23 @@ export default function RiderTasks() {
         <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-              Welcome back, Rider! 🛵
+              {t("rider.tasks.welcome")}
             </h2>
             <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Here are your assigned orders and deliveries for today.
+              {t("rider.tasks.subtitle")}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:gap-6">
             <div className={`rounded-2xl p-4 text-center ${isDark ? "bg-slate-900/60" : "bg-slate-50"}`}>
               <p className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-cyan-400" : "text-sky-600"}`}>
-                Active
+                {t("rider.tasks.active")}
               </p>
               <p className="mt-1 text-xl font-bold">{activeOrders.length}</p>
             </div>
             <div className={`rounded-2xl p-4 text-center ${isDark ? "bg-slate-900/60" : "bg-slate-50"}`}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500">
-                Completed
+                {t("rider.tasks.completed")}
               </p>
               <p className="mt-1 text-xl font-bold">{completedOrders.length}</p>
             </div>
@@ -271,7 +274,7 @@ export default function RiderTasks() {
               : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          Active Tasks ({activeOrders.length})
+          {t("rider.tasks.activeTasks")} ({activeOrders.length})
           {activeTab === "active" && (
             <motion.div
               layoutId="riderActiveLine"
@@ -291,7 +294,7 @@ export default function RiderTasks() {
               : "text-slate-500 hover:text-slate-700"
           }`}
         >
-          Completed Tasks ({completedOrders.length})
+          {t("rider.tasks.completedTasks")} ({completedOrders.length})
           {activeTab === "completed" && (
             <motion.div
               layoutId="riderActiveLine"
@@ -334,11 +337,11 @@ export default function RiderTasks() {
             >
               <Compass className="h-6 w-6 animate-spin" />
             </div>
-            <h3 className="font-semibold">No assigned orders</h3>
+            <h3 className="font-semibold">{t("rider.tasks.noAssignedOrders")}</h3>
             <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               {activeTab === "active"
-                ? "Everything is delivered! Check back soon for new route coordinates."
-                : "Complete your first delivery job to see it listed here."}
+                ? t("rider.tasks.noActiveDesc")
+                : t("rider.tasks.noCompletedDesc")}
             </p>
           </div>
         ) : (
@@ -364,7 +367,7 @@ export default function RiderTasks() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <span className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                          ID:
+                          {t("rider.tasks.id")}
                         </span>
                         <span className="text-sm font-bold tracking-tight">
                           #{orderId ? orderId.slice(-6).toUpperCase() : "N/A"}
@@ -385,13 +388,13 @@ export default function RiderTasks() {
                         </div>
                         <div>
                           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
-                            Deliver To
+                            {t("rider.tasks.deliverTo")}
                           </p>
                           <p className="text-xs font-bold leading-tight mt-0.5 line-clamp-1">
                             {order.deliveryLocation?.address || (order as any).deliveryAddress || "N/A"}
                           </p>
                           <p className="text-[11px] text-slate-400">
-                            Cust: {order.customer?.name || (order as any).customerName || "Unknown"}
+                            {t("rider.tasks.cust")} {order.customer?.name || (order as any).customerName || "Unknown"}
                           </p>
                         </div>
                       </div>
@@ -402,7 +405,7 @@ export default function RiderTasks() {
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1 text-slate-400">
                           <ShoppingBag className="h-3.5 w-3.5" />
-                          <span>{(order as any).itemCount ?? (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0)} Items</span>
+                          <span>{(order as any).itemCount ?? (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0)} {t("rider.tasks.items")}</span>
                         </div>
                         <span className={`font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
                           {(order.totalAmount || 0).toLocaleString()} Ks
@@ -417,7 +420,7 @@ export default function RiderTasks() {
                           onClick={(e) => handleAcceptTask(e, orderId)}
                           className="w-full rounded-xl bg-sky-500 py-2.5 text-center text-sm font-bold text-white shadow-md hover:bg-sky-600 active:scale-95 transition-all"
                         >
-                          Accept Task
+                          {t("rider.tasks.acceptTask")}
                         </button>
                       </div>
                     )}

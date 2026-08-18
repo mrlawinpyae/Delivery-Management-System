@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import {  ClipboardList, User, Sun, Moon } from "lucide-react"
 import { useThemeStore } from "@/store/useThemeStore"
 
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { useTranslation } from "@/hooks/useTranslation"
+
 // ─── NEW IMPORTS FOR AUTH & GPS TRACKING ─────────────────────────────────────
 import { useAuthStore } from "@/store/useAuthStore" 
 import { useRiderLocation } from "./hooks/useRiderLocation"
@@ -106,6 +109,7 @@ function ThemeToggle({ tk }: { tk: typeof tokens.dark | typeof tokens.light }) {
 
 // ─── Online Status Pill ───────────────────────────────────────────────────────
 function OnlinePill({ size = "md" }: { size?: "sm" | "md" }) {
+  const { t } = useTranslation()
   const sm = size === "sm"
   return (
     <div
@@ -120,15 +124,16 @@ function OnlinePill({ size = "md" }: { size?: "sm" | "md" }) {
       <span
         className={`${sm ? "text-[10px]" : "text-[11px]"} font-semibold text-emerald-400`}
       >
-        Online
+        {t("rider.layout.online")}
       </span>
-      {!sm && <span className="text-[10px] text-emerald-600">· Accepting</span>}
+      {!sm && <span className="text-[10px] text-emerald-600">· {t("rider.layout.accepting")}</span>}
     </div>
   )
 }
 
 // ─── Root Layout ─────────────────────────────────────────────────────────────
 export default function RiderLayout() {
+  const { t } = useTranslation()
   const location = useLocation()
   const theme = useThemeStore((s) => s.theme)
   const tk = tokens[theme]
@@ -139,13 +144,13 @@ export default function RiderLayout() {
   useRiderLocation(user?.userId) // Start the WebSocket 5-second interval loop
 
   const navItems = [
-    { path: "/rider", label: "Tasks", icon: ClipboardList },
+    { path: "/rider", label: t("rider.layout.tasks"), icon: ClipboardList },
     // { path: "/rider/map", label: "Map", icon: Map },
-    { path: "/rider/profile", label: "Profile", icon: User },
+    { path: "/rider/profile", label: t("rider.layout.profile"), icon: User },
   ]
 
   const activeLabel =
-    navItems.find((n) => n.path === location.pathname)?.label ?? "Dashboard"
+    navItems.find((n) => n.path === location.pathname)?.label ?? t("rider.layout.dashboard")
 
   return (
     // We toggle the `.dark` class here so CSS custom-variants (used by shadcn)
@@ -233,6 +238,7 @@ export default function RiderLayout() {
 
         {/* Online dot + theme toggle */}
         <div className="flex flex-col items-center gap-3">
+          <LanguageSwitcher orientation="vertical" />
           <ThemeToggle tk={tk} />
           <div className="flex flex-col items-center gap-1.5">
             <div className="relative">
@@ -242,7 +248,7 @@ export default function RiderLayout() {
             <span
               className={`text-[9px] font-semibold tracking-widest uppercase ${tk.liveLabel}`}
             >
-              Live
+              {t("rider.layout.live")}
             </span>
           </div>
         </div>
@@ -269,10 +275,12 @@ export default function RiderLayout() {
             <span
               className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${tk.riderBadge}`}
             >
-              Rider Mode
+              {t("rider.layout.riderMode")}
             </span>
           </div>
-          <OnlinePill size="md" />
+          <div className="flex items-center gap-4">
+            <OnlinePill size="md" />
+          </div>
         </header>
 
         {/* MOBILE TOP HEADER */}
@@ -293,11 +301,12 @@ export default function RiderLayout() {
             <span
               className={`rounded-md px-2 py-1 text-[9px] font-bold tracking-wider ${isDark ? "bg-slate-800 text-slate-300" : "bg-blue-50 text-[#0f264a]"} uppercase`}
             >
-              Rider
+              {t("rider.layout.rider")}
             </span>
           </Link>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle tk={tk} />
             <OnlinePill size="sm" />
           </div>

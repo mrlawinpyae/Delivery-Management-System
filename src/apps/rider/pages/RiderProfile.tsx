@@ -48,7 +48,10 @@ interface UserProfileData {
   }
 }
 
+import { useTranslation } from "@/hooks/useTranslation"
+
 export default function RiderProfile() {
+  const { t } = useTranslation()
   const theme = useThemeStore((s) => s.theme)
   const isDark = theme === "dark"
   const loggedInUser = useAuthStore((s) => s.user)
@@ -104,22 +107,22 @@ export default function RiderProfile() {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center text-center">
         <p className={isDark ? "text-slate-400" : "text-slate-500"}>
-          Profile not found
+          {t("rider.profile.profileNotFound")}
         </p>
       </div>
     )
   }
 
   const infoFields = [
-    { icon: User, label: "Full Name", value: profile.name },
-    { icon: Mail, label: "Email Address", value: profile.email },
-    { icon: Phone, label: "Phone Number", value: profile.phone },
-    { icon: Bike, label: "Role", value: profile.role },
-    ...(profile.status ? [{ icon: Activity, label: "Status", value: profile.status }] : []),
-    ...(profile.nrcNumber ? [{ icon: IdCard, label: "NRC Number", value: profile.nrcNumber }] : []),
+    { icon: User, label: t("rider.profile.fullName"), value: profile.name },
+    { icon: Mail, label: t("rider.profile.emailAddress"), value: profile.email },
+    { icon: Phone, label: t("rider.profile.phoneNumber"), value: profile.phone },
+    { icon: Bike, label: t("rider.profile.role"), value: profile.role },
+    ...(profile.status ? [{ icon: Activity, label: t("rider.profile.status"), value: profile.status }] : []),
+    ...(profile.nrcNumber ? [{ icon: IdCard, label: t("rider.profile.nrcNumber"), value: profile.nrcNumber }] : []),
     ...(profile.vehicle ? [
-      { icon: Car, label: "Vehicle Type", value: profile.vehicle.type },
-      { icon: IdCard, label: "Licence Number", value: profile.vehicle.licenceNumber },
+      { icon: Car, label: t("rider.profile.vehicleType"), value: profile.vehicle.type },
+      { icon: IdCard, label: t("rider.profile.licenceNumber"), value: profile.vehicle.licenceNumber },
     ] : [])
   ]
 
@@ -237,7 +240,7 @@ export default function RiderProfile() {
                 }`}
               >
                 <ShieldCheck size={11} />
-                Verified
+                {t("rider.profile.verified")}
               </span>
             </div>
           </div>
@@ -260,7 +263,7 @@ export default function RiderProfile() {
               : "border-b border-slate-100 text-slate-400"
           }`}
         >
-          Personal Information
+          {t("rider.profile.personalInformation")}
         </div>
 
         <div className="divide-y divide-slate-100">
@@ -319,7 +322,7 @@ export default function RiderProfile() {
       >
         <Info size={14} className="shrink-0" />
         <p className="text-[11px] leading-relaxed">
-          Profile details are read-only. Contact support for changes.
+          {t("rider.profile.readOnlyNotice")}
         </p>
       </motion.div>
 
@@ -334,7 +337,7 @@ export default function RiderProfile() {
           }`}
         >
           <LogOut size={16} strokeWidth={2} />
-          Log Out
+          {t("rider.profile.logOut")}
         </button>
       </motion.div>
     </motion.div>

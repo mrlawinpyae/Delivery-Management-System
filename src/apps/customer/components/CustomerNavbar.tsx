@@ -111,7 +111,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
           )}
         </AnimatePresence>
         <Link to="/customer" className="group flex items-center gap-2 md:gap-3">
-          <img src={BrandLogo} alt="Magway Logo" className="h-12 w-auto md:h-16 md:w-auto object-contain scale-110 transition-transform group-hover:scale-125" />
+          <img src={BrandLogo} alt="Magway Logo" className="h-12 w-auto md:h-13 md:w-auto object-contain scale-110 transition-transform group-hover:scale-125" />
           <div className="flex flex-col justify-center">
             <span className="text-xl md:text-2xl font-bold tracking-tight text-[#0f264a] leading-none">Magway</span>
             <span className="text-[10px] md:text-[11px] font-bold tracking-[0.15em] text-[#0f264a] mt-1 leading-none uppercase">Food Delivery</span>
