@@ -147,12 +147,15 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [page, setPage] = useState(0)
   const navigate = useNavigate()
+  const PAGE_SIZE = 15
 
-  const fetchOrders = useCallback(async (isRefresh = false) => {
+  const fetchOrders = useCallback(async (isRefresh = false, targetPage = page) => {
     if (isRefresh) setRefreshing(true)
+    else setLoading(true)
     try {
-      const res = await axios.get("/orders")
+      const res = await axios.get(`/orders?page=${targetPage}&size=${PAGE_SIZE}`)
       if (res.data?.data) setOrders(res.data.data)
     } catch {
       toast.error("Failed to load orders")
@@ -160,11 +163,11 @@ export default function AdminOrdersPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [page])
 
   useEffect(() => {
-    fetchOrders()
-  }, [fetchOrders])
+    fetchOrders(false, page)
+  }, [page, fetchOrders])
 
   const total = orders.length
   const byStatus = (s: OrderStatus) => orders.filter((o) => o.status === s).length
@@ -487,6 +490,29 @@ export default function AdminOrdersPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between border-t border-slate-100 bg-white px-5 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0 || loading}
+          >
+            Previous
+          </Button>
+          <span className="text-sm font-medium text-slate-600">
+            Page {page + 1}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={orders.length < PAGE_SIZE || loading}
+          >
+            Next
+          </Button>
         </div>
       </motion.div>
     </div>
