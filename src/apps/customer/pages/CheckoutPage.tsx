@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react"
-
+import menuLogo from '../../../imgs/menu_logo.jpg'
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 
@@ -39,8 +39,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
-     
-
       <h1 className="mb-6 font-serif text-2xl font-bold text-zinc-900 sm:text-3xl">
         Your Order
       </h1>
@@ -71,7 +69,7 @@ export default function CheckoutPage() {
             >
               <button
                 onClick={() => removeEntireItem(item.itemId)}
-                className="absolute right-3 top-3 flex items-center justify-center rounded-full p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                className="absolute top-3 right-3 flex items-center justify-center rounded-full p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-500"
               >
                 <X size={16} />
               </button>
@@ -80,7 +78,7 @@ export default function CheckoutPage() {
                 {/* Image */}
 
                 <img
-                  src={item.image}
+                  src={item.image || menuLogo}
                   alt={item.name}
                   className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
                 />

@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Loader2, ArrowLeft, Package, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import type { Order } from "@/types/index.ts"
+import menuLogo from "../../../imgs/menu_logo.jpg"
 
 export default function OrderDetailsPage() {
   const { id } = useParams()
@@ -67,17 +68,11 @@ export default function OrderDetailsPage() {
                 className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
-                  {item.image && item.image !== "fdf" ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-16 w-16 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200">
-                      <Package className="h-8 w-8 text-zinc-500" />
-                    </div>
-                  )}
+                  <img
+                    src={item.image || menuLogo}
+                    alt={item.name}
+                    className="h-16 w-16 rounded-2xl object-cover"
+                  />
 
                   <div className="flex flex-1 flex-col items-center sm:items-start">
                     <h3 className="text-center text-base font-semibold text-zinc-900 sm:text-left">
