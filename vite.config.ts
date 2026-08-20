@@ -38,7 +38,8 @@ export default defineConfig({
     proxy: {
       "/api": {
         // target: "http://localhost:8080", // Adjust if your backend runs on a different port
-        target: "http://192.168.43.105:8080", // Adjust if your backend runs on a different port
+        // target: "http://192.168.43.105:8080", // Adjust if your backend runs on a different port
+        target: "http://192.168.137.1:8080", // Adjust if your backend runs on a different port
         changeOrigin: true,
       },
     },
