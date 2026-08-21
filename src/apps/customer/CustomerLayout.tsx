@@ -39,7 +39,7 @@ export default function CustomerLayout() {
       </main>
 
       {/* ─── FOOTER ─── */}
-      <CustomerFooter />
+      {(location.pathname === "/customer" || location.pathname === "/customer/") && <CustomerFooter />}
 
       {/* ─── MOBILE BOTTOM BAR ─── */}
       <MobileNavbar scaleX={scaleX} />
