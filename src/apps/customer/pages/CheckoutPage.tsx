@@ -133,22 +133,22 @@ export default function CheckoutPage() {
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
         {/* Summary Section */}
         <div className="space-y-4">
-          <div className="flex justify-between text-sm text-zinc-500">
+          {/* <div className="flex justify-between text-sm text-zinc-500">
             <span>Subtotal</span>
             <span className="font-medium text-zinc-900">
               {totalAmount.toLocaleString()} MMK
             </span>
-          </div>
+          </div> */}
 
-          <div className="flex justify-between text-sm text-zinc-500">
+          {/* <div className="flex justify-between text-sm text-zinc-500">
             <span>Delivery Fee</span>
             <span className="text-zinc-600">To be paid to Rider</span>
-          </div>
+          </div> */}
 
-          <div className="flex justify-between border-t border-zinc-200 pt-4 text-lg font-bold">
-            <span>Order Total</span>
+          <div className="flex justify-between text-lg font-bold">
+            <span>Subtotal</span>
             <span className="text-zinc-900">
-              {totalAmount.toLocaleString()} MMK (+ Delivery)
+              {totalAmount.toLocaleString()} MMK
             </span>
           </div>
         </div>

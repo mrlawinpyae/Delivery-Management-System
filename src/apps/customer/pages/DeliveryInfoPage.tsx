@@ -20,6 +20,16 @@ import {
 import "react-international-phone/style.css"
 import { toast, Toaster } from "sonner"
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import axios from "@/lib/axios"
+import { useCartStore } from "@/store/useCartStore"
+
 // Google Maps
 import {
   GoogleMap,
@@ -123,6 +133,12 @@ export default function DeliveryInfoPage() {
     MAGWAY_CENTER
   )
 
+  const [billOpen, setBillOpen] = useState(false)
+  const [calculating, setCalculating] = useState(false)
+  const [billData, setBillData] = useState<any>(null)
+  
+  const { items } = useCartStore()
+
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     language: "my", // Display map labels and UI text in Myanmar/Burmese script
@@ -208,7 +224,7 @@ export default function DeliveryInfoPage() {
     navigate("/customer/checkout")
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const result = deliverySchema.safeParse({ phone, address })
 
     if (!result.success) {
@@ -226,12 +242,38 @@ export default function DeliveryInfoPage() {
       return
     }
 
+    setCalculating(true)
+    try {
+      const payloadItems = Object.values(items).map(item => ({
+        restaurantId: item.restaurantId,
+        menuItemId: item.itemId,
+        quantity: item.quantity
+      }))
+
+      const response = await axios.post('/orders/calculate-fee', {
+        latitude: position.lat,
+        longitude: position.lng,
+        items: payloadItems
+      })
+      
+      const responseData = response.data.data || response.data
+      setBillData(responseData)
+      setBillOpen(true)
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to calculate delivery fee")
+    } finally {
+      setCalculating(false)
+    }
+  }
+
+  const handleProceedToPayment = () => {
+    setBillOpen(false)
     navigate("/customer/payment", {
       state: {
         phone,
         address,
         position,
-        totalAmount,
+        totalAmount: billData?.grandTotal || totalAmount,
       },
     })
   }
@@ -330,10 +372,18 @@ export default function DeliveryInfoPage() {
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
-          disabled={locating || !isWithinMagwayBounds(position.lat, position.lng)}
+          disabled={locating || calculating || !isWithinMagwayBounds(position.lat, position.lng)}
         >
-          {locating ? "Locating..." : "Next"}{" "}
-          <ArrowRight size={18} className="ml-2" />
+          {calculating ? (
+            <>
+              <Loader2 size={18} className="mr-2 animate-spin" />
+              Calculating Fee...
+            </>
+          ) : (
+            <>
+              Next <ArrowRight size={18} className="ml-2" />
+            </>
+          )}
         </Button>
         <button
           onClick={() => navigate("/customer/checkout")}
@@ -342,6 +392,58 @@ export default function DeliveryInfoPage() {
           <ArrowLeft size={16} /> Back to Checkout
         </button>
       </div>
+
+      <Dialog open={billOpen} onOpenChange={setBillOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Order Summary</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-between text-sm text-zinc-500">
+              <span>Subtotal</span>
+              <span className="font-medium text-foreground">
+                {(billData?.itemsTotal || totalAmount || 0).toLocaleString()} MMK
+              </span>
+            </div>
+            
+            <div className="flex justify-between text-sm text-zinc-500">
+              <span>Distance</span>
+              <span className="font-medium text-foreground">
+                {billData?.totalDistanceKm ? `${billData.totalDistanceKm} km` : '-'}
+              </span>
+            </div>
+
+            <div className="flex justify-between text-sm text-zinc-500">
+              <span>Delivery Fee</span>
+              <span className="font-medium text-foreground">
+                {(billData?.deliveryFee || 0).toLocaleString()} MMK
+              </span>
+            </div>
+            
+            <div className="my-2 border-t border-zinc-200 dark:border-zinc-700"></div>
+
+            <div className="flex justify-between text-lg font-bold">
+              <span className="text-foreground">Grand Total</span>
+              <span className="text-foreground">
+                {(billData?.grandTotal || 0).toLocaleString()} MMK
+              </span>
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setBillOpen(false)}
+              className="mt-2 sm:mt-0"
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleProceedToPayment}>
+              Continue to Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+
