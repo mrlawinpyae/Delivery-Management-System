@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
+import { getImageUrl } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 import restLogo from "../../../imgs/resturant_logo.jpg"
 // Google Maps
@@ -292,13 +293,13 @@ export default function AdminOrderDetailsPage() {
                     Screenshot
                   </p>
                   <a
-                    href={orderDetails.paymentImg}
+                    href={getImageUrl(orderDetails.paymentImg)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block"
                   >
                     <img
-                      src={orderDetails.paymentImg}
+                      src={getImageUrl(orderDetails.paymentImg)}
                       alt="KPay Screenshot"
                       className="h-20 w-20 rounded-xl border border-slate-200 object-cover shadow-sm transition-opacity hover:opacity-90"
                     />
@@ -326,7 +327,7 @@ export default function AdminOrderDetailsPage() {
                 >
                   {item.image ? (
                     <img
-                      src={item.image}
+                      src={getImageUrl(item.image)}
                       alt={item.name}
                       className="h-14 w-14 rounded-lg border border-slate-100 object-cover"
                     />
@@ -339,24 +340,24 @@ export default function AdminOrderDetailsPage() {
                     <p className="text-sm font-bold text-slate-900">
                       {item.name}
                     </p>
-                    <p className="mt-0.5 text-xs font-medium text-slate-500">
-                      Qty: {item.quantity}
+                    <p className="text-xs font-medium text-slate-500">
+                      Qty: {item.quantity} × {item.price?.toLocaleString()} MMK
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-base font-black text-slate-900">
-                      {item.priceAtPurchase?.toLocaleString() ||
-                        (item.price * item.quantity)?.toLocaleString()}{" "}
-                      Ks
+                    <p className="text-sm font-bold text-slate-900">
+                      {(
+                        item.quantity * (item.priceAtPurchase || item.price)
+                      ).toLocaleString()}{" "}
+                      MMK
                     </p>
                   </div>
                 </div>
               ))}
-              {(!(orderDetails.items || orderDetails.restaurants?.[0]?.items) ||
-                (orderDetails.items || orderDetails.restaurants?.[0]?.items)
-                  .length === 0) && (
-                <p className="px-2 text-sm text-slate-500 italic">
-                  No items found.
+              {!orderDetails.items?.length &&
+                !orderDetails.restaurants?.[0]?.items?.length && (
+                <p className="text-sm font-medium text-slate-500 italic">
+                  No items in this order
                 </p>
               )}
             </div>
@@ -380,7 +381,7 @@ export default function AdminOrderDetailsPage() {
                   className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:gap-5 sm:p-5"
                 >
                   <img
-                    src={restaurant.image||restLogo}
+                    src={restaurant.image ? getImageUrl(restaurant.image) : restLogo}
                     alt={restaurant.name}
                     className="h-12 w-12 shrink-0 rounded-full border-2 border-white object-cover shadow-sm sm:h-16 sm:w-16"
                   />

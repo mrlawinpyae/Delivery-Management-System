@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { toast, Toaster } from "sonner"
 import axios from "@/lib/axios"
 import { useAuthStore } from "@/store/useAuthStore"
+import { getImageUrl } from "@/lib/utils"
 import { isValidPhoneNumber } from "libphonenumber-js"
 import {
   PhoneInput,
@@ -382,7 +383,7 @@ export default function ProfileSettingsPage() {
                 <div className="group relative h-24 w-24 overflow-hidden rounded-full border-2 border-zinc-200 shadow-sm transition-all hover:border-zinc-400 hover:shadow-md">
                   {avatarPreview ? (
                     <img
-                      src={avatarPreview}
+                      src={getImageUrl(avatarPreview)}
                       alt="Profile Preview"
                       className="h-full w-full object-cover"
                     />

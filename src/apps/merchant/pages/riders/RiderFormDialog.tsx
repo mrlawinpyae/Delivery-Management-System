@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
+import { getImageUrl } from "@/lib/utils"
 import type { RiderSummary, CreateRiderPayload } from "@/types"
 import { FormField } from "./FormField"
 import {
@@ -331,7 +332,7 @@ export function RiderFormDialog({
                 <div className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-slate-200 shadow-sm transition-all hover:border-slate-400 hover:shadow-md">
                   {avatarPreview ? (
                     <img
-                      src={avatarPreview}
+                      src={getImageUrl(avatarPreview)}
                       alt="Rider preview"
                       className="h-full w-full object-cover"
                     />

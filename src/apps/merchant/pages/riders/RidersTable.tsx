@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import type { RiderSummary } from "@/types"
 import type { ModalType } from "./types"
 import { STATUS_STYLE } from "./types"
+import { getImageUrl } from "@/lib/utils"
 
 interface Props {
   riders: RiderSummary[]
@@ -102,7 +103,7 @@ export function RidersTable({ riders, loading, onOpenModal }: Props) {
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-50 border border-indigo-200/80 shadow-xs">
                           {rider.image && rider.image.trim() !== "" ? (
                             <img
-                              src={rider.image}
+                              src={getImageUrl(rider.image)}
                               alt={rider.name}
                               className="h-full w-full object-cover"
                             />

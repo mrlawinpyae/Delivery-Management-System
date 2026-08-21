@@ -8,6 +8,7 @@ import { useInfiniteRestaurantDetails, useRestaurants } from "../hooks/useRestau
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { getImageUrl } from "@/lib/utils"
 
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>()
@@ -141,7 +142,7 @@ export default function RestaurantMenu() {
         <div className="relative h-60 w-full overflow-hidden rounded-3xl">
           <img
             src={
-              restaurantInfo.image || restaurantInfo.restaurantImg || restLogo
+              (restaurantInfo.image || restaurantInfo.restaurantImg) ? getImageUrl(restaurantInfo.image || restaurantInfo.restaurantImg) : restLogo
             }
             alt={restaurantInfo.name}
             className="h-full w-full object-cover"
@@ -185,7 +186,7 @@ export default function RestaurantMenu() {
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
                   <img
                     loading="lazy"
-                    src={item.image || menuLogo}
+                    src={item.image ? getImageUrl(item.image) : menuLogo}
                     alt={item.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

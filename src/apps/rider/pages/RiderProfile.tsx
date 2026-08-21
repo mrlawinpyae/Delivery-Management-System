@@ -18,6 +18,7 @@ import {
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
 import axios from "@/lib/axios"
+import { getImageUrl } from "@/lib/utils"
 import { toast } from "sonner"
 
 // ─── Animation ───────────────────────────────────────────────────────────────
@@ -185,7 +186,7 @@ export default function RiderProfile() {
               >
                 {hasProfileImage ? (
                   <img
-                    src={profile.image}
+                    src={getImageUrl(profile.image)}
                     alt={profile.name}
                     className="h-full w-full object-cover"
                   />

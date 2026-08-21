@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { MyanmarNrcInput, formatNrcDisplay } from "@/components/ui/myanmar-nrc-input"
+import { getImageUrl } from "@/lib/utils"
 
 const stagger: Variants = {
   hidden: {},
@@ -171,7 +172,7 @@ export default function AdminOrderRiderDetailsPage() {
                 <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg shadow-slate-300/40">
                   {hasProfileImage ? (
                     <img
-                      src={rider.image}
+                      src={getImageUrl(rider.image)}
                       alt={rider.name}
                       className="h-full w-full object-cover"
                     />

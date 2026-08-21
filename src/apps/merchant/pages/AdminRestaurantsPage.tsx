@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
+import { getImageUrl } from "@/lib/utils"
 import { GoogleMap, useLoadScript, OverlayView } from "@react-google-maps/api"
 import restLogo from "../../../imgs/resturant_logo.jpg"
 import { Button } from "@/components/ui/button"
@@ -594,10 +595,9 @@ export default function AdminRestaurantsPage() {
                 transition={{ duration: 0.2 }}
               >
                 <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-slate-200/60 bg-white p-0 shadow-sm transition-all hover:shadow-md">
-                  {/* Image Header */}
                   <div className="relative h-48 w-full shrink-0 bg-slate-50">
                     <img
-                      src={restaurant.image || restLogo}
+                      src={restaurant.image ? getImageUrl(restaurant.image) : restLogo}
                       alt={restaurant.name}
                       className="h-full w-full object-cover"
                     />
@@ -741,7 +741,7 @@ export default function AdminRestaurantsPage() {
                   <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                     {formData.image ? (
                       <img
-                        src={formData.image}
+                        src={getImageUrl(formData.image)}
                         alt="Restaurant Preview"
                         className="h-full w-full object-cover"
                       />

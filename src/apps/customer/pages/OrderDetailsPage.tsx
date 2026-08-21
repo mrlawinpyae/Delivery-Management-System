@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Package, MapPin, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import type { Order } from "@/types/index.ts"
 import menuLogo from "../../../imgs/menu_logo.jpg"
+import { getImageUrl } from "@/lib/utils"
 
 export default function OrderDetailsPage() {
   const { id } = useParams()
@@ -69,7 +70,7 @@ export default function OrderDetailsPage() {
               >
                 <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
                   <img
-                    src={item.image || menuLogo}
+                    src={item.image ? getImageUrl(item.image) : menuLogo}
                     alt={item.name}
                     className="h-16 w-16 rounded-2xl object-cover"
                   />

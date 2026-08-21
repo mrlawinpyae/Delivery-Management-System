@@ -18,6 +18,7 @@ import {
 import axios from "@/lib/axios"
 import { toast } from "sonner"
 import menuLogo from "../../../imgs/menu_logo.jpg"
+import { getImageUrl } from "@/lib/utils"
 import restLogo from "../../../imgs/resturant_logo.jpg"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -426,7 +427,7 @@ export default function AdminRestaurantDetailsPage() {
       {/* Restaurant Info Banner */}
       <div className="relative h-48 w-full overflow-hidden rounded-3xl shadow-sm">
         <img
-          src={restaurant.restaurantImg || restLogo}
+          src={restaurant.restaurantImg ? getImageUrl(restaurant.restaurantImg) : restLogo}
           alt={restaurant.name}
           className="h-full w-full object-cover"
         />
@@ -439,7 +440,7 @@ export default function AdminRestaurantDetailsPage() {
             <span>{restaurant.address}</span>
             {restaurant.phone && (
               <>
-                <span className="h-1 w-1 rounded-full bg-slate-400"></span>
+                <span className="h-1 w-1 rounded-full bg-slate-500" />
                 <span>{restaurant.phone}</span>
               </>
             )}
@@ -447,15 +448,15 @@ export default function AdminRestaurantDetailsPage() {
         </div>
       </div>
 
-      {/* Menus Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+      {/* Main Content Area */}
+      <div className="mt-6 flex flex-col gap-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-bold text-slate-900">Menu Items</h3>
           <Button
             onClick={() => handleOpenModal()}
-            className="cursor-pointer bg-indigo-600 font-medium text-white hover:bg-indigo-700"
+            className="w-full shrink-0 gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Add Menu Item
           </Button>
         </div>
@@ -476,7 +477,7 @@ export default function AdminRestaurantDetailsPage() {
                   <Card className="group flex h-full flex-col gap-0 overflow-hidden rounded-2xl bg-white p-0 shadow-sm ring-1 ring-slate-200 transition-all hover:shadow-md hover:ring-slate-300">
                     <div className="relative h-48 w-full shrink-0 overflow-hidden bg-slate-50">
                       <img
-                        src={item.image||menuLogo}
+                        src={item.image ? getImageUrl(item.image) : menuLogo}
                         alt={item.name}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
@@ -491,62 +492,48 @@ export default function AdminRestaurantDetailsPage() {
                           </Badge>
                         </div>
                       )}
+
+                      {/* Floating Actions */}
+                      <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="h-8 w-8 rounded-full bg-white/90 text-slate-700 shadow-sm hover:bg-white hover:text-slate-900"
+                          onClick={() => handleOpenModal(item)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-8 w-8 rounded-full shadow-sm"
+                          onClick={() => setMenuToDelete(item)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <CardContent className="flex flex-1 flex-col p-5">
-                      <div className="mb-4 flex-1 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="line-clamp-1 font-serif text-lg font-bold text-slate-900">
-                            {item.name}
-                          </h3>
-                          {item.category && (
-                            <Badge
-                              variant="outline"
-                              className="shrink-0 border-indigo-200 bg-indigo-50 text-[11px] font-medium text-indigo-700 capitalize"
-                            >
-                              {item.category}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="line-clamp-2 text-sm text-slate-500">
-                          {item.description}
+                    <CardContent className="flex flex-1 flex-col p-4 sm:p-5">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <h4 className="line-clamp-2 text-base font-bold text-slate-900 leading-tight">
+                          {item.name}
+                        </h4>
+                        <p className="shrink-0 text-base font-black text-slate-900">
+                          {Number(item.price || 0).toLocaleString()} Ks
                         </p>
                       </div>
-                      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
-                        <span className="font-semibold text-indigo-600 md:text-lg">
-                          {Number(item.price || 0).toLocaleString()}{" "}
-                          <span className="text-xs text-slate-500">MMK</span>
-                        </span>
-
-                        <div className="flex shrink-0 items-center gap-1.5">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-9 w-9 cursor-pointer text-slate-600 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
-                            onClick={() => handleOpenModal(item)}
-                            title="Edit Menu Item"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-9 w-9 cursor-pointer text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-                            onClick={() => setMenuToDelete(item)}
-                            title="Delete Menu Item"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      <p className="mb-4 line-clamp-2 text-xs text-slate-500">
+                        {item.description || "No description provided."}
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>
               )
             })}
-            {menus.length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-500">
-                No menu items found for this restaurant. Click "Add Menu Item"
+            {menus.length === 0 && !isFetchingNextPage && (
+              <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 py-12 text-center text-sm font-medium text-slate-500">
+                No menu items found. Click "Add Menu Item" <br className="sm:hidden" />
                 to create one.
               </div>
             )}
@@ -646,9 +633,8 @@ export default function AdminRestaurantDetailsPage() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  rows={2}
-                  placeholder="e.g. Delicious traditional Myanmar dish"
-                  className="resize-none rounded-md border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
+                  placeholder="e.g. Traditional Burmese noodle soup..."
+                  className="min-h-[70px] resize-none rounded-md border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                 />
               </div>
 
@@ -658,7 +644,7 @@ export default function AdminRestaurantDetailsPage() {
                   htmlFor="price"
                   className="text-xs font-semibold text-slate-700"
                 >
-                  Price (MMK)
+                  Price (Ks)
                 </Label>
                 <Input
                   id="price"
@@ -681,7 +667,7 @@ export default function AdminRestaurantDetailsPage() {
                   <div className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                     {formData.image ? (
                       <img
-                        src={formData.image}
+                        src={getImageUrl(formData.image)}
                         alt="Menu Item Preview"
                         className="h-full w-full object-cover"
                       />

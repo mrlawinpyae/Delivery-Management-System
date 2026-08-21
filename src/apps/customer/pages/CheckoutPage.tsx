@@ -4,6 +4,7 @@ import { Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react"
 import menuLogo from '../../../imgs/menu_logo.jpg'
 import { useCartStore } from "../../../store/useCartStore"
 import { Button } from "@/components/ui/button"
+import { getImageUrl } from "@/lib/utils"
 
 export default function CheckoutPage() {
   const { items, addToCart, removeFromCart, removeEntireItem } = useCartStore()
@@ -78,7 +79,7 @@ export default function CheckoutPage() {
                 {/* Image */}
 
                 <img
-                  src={item.image || menuLogo}
+                  src={item.image ? getImageUrl(item.image) : menuLogo}
                   alt={item.name}
                   className="h-20 w-20 flex-shrink-0 rounded-xl object-cover"
                 />

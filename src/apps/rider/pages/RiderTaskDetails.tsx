@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner"
 import { useThemeStore } from "@/store/useThemeStore"
 import { useAuthStore } from "@/store/useAuthStore"
+import { getImageUrl } from "@/lib/utils"
 
 // Google Maps
 import {
@@ -964,7 +965,7 @@ export default function RiderTaskDetails() {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={order.customer?.image || (order as any).recipient?.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"}
+                      src={(order.customer?.image || (order as any).recipient?.image) ? getImageUrl(order.customer?.image || (order as any).recipient?.image) : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"}
                       alt={(order as any).recipient?.name || order.customer?.name || (order as any).customerName || "Customer"}
                       onError={(e) => {
                         ;(e.target as HTMLImageElement).src =
