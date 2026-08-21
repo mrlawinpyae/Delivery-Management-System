@@ -16,6 +16,7 @@ import { ChevronDown, Search, UserPlus } from "lucide-react"
 import { useSearch } from "@/context/SearchContext"
 import { useAuthStore } from "@/store/useAuthStore"
 import BrandLogo from "@/imgs/brand_logo.png"
+import { getImageUrl } from "@/lib/utils"
 
 export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
   const location = useLocation()
@@ -79,7 +80,7 @@ export default function MobileNavbar({ scaleX }: { scaleX?: any }) {
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
                 <Avatar className="h-6 w-6">
                   <AvatarImage 
-                    src={user?.img || user?.image || "https://github.com/shadcn.png"} 
+                    src={(user?.img || user?.image) ? getImageUrl(user?.img || user?.image) : "https://github.com/shadcn.png"} 
                     alt={user?.name || "User Avatar"}
                   />
                   <AvatarFallback>

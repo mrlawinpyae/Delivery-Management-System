@@ -22,6 +22,7 @@ import { useEffect, useRef } from "react"
 import { useSearch } from "@/context/SearchContext"
 import { useAuthStore } from "@/store/useAuthStore"
 import BrandLogo from "@/imgs/brand_logo.png"
+import { getImageUrl } from "@/lib/utils"
 
 export const useNavItems = () => {
   const cartItems = useCartStore((state) => state.items)
@@ -161,7 +162,7 @@ export default function CustomerNavbar({ scaleX }: { scaleX: any }) {
               <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-full border border-zinc-100 bg-zinc-50 p-1 pr-2 transition-all outline-none hover:cursor-pointer hover:bg-zinc-100">
                 <Avatar className="h-7 w-7">
                   <AvatarImage
-                    src={user?.img || user?.image || "https://github.com/shadcn.png"}
+                    src={(user?.img || user?.image) ? getImageUrl(user?.img || user?.image) : "https://github.com/shadcn.png"}
                     alt={user?.name || "User Avatar"}
                   />
                   <AvatarFallback>
