@@ -133,11 +133,7 @@ export default function BrowseRestaurants() {
           ) : hasNextPage ? (
             <div className="h-10" />
           ) : (
-            filteredRestaurants.length > 0 && (
-              <div className="py-4 text-center text-sm text-zinc-500">
-                You've reached the end of the list.
-              </div>
-            )
+            <div className="h-10" />
           )}
         </div>
       </section>

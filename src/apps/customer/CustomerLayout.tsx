@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion"
 // Shadcn UI Components
 import CustomerNavbar from "./components/CustomerNavbar"
 import MobileNavbar from "./components/MobileNavbar"
+import CustomerFooter from "./components/CustomerFooter"
 
 export default function CustomerLayout() {
   const location = useLocation()
@@ -37,8 +38,12 @@ export default function CustomerLayout() {
         </AnimatePresence>
       </main>
 
+      {/* ─── FOOTER ─── */}
+      <CustomerFooter />
+
       {/* ─── MOBILE BOTTOM BAR ─── */}
       <MobileNavbar scaleX={scaleX} />
+    
     </div>
   )
 }
