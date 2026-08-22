@@ -85,18 +85,18 @@ export default function CustomerAuth() {
       })
 
     
-      toast.success(response.data.message || "Success!")
+      toast.success(response.data.message || "Success!", { duration: 2000 })
 
       if (isLogin) {
         const { token, ...userData } = response.data.data
         login(userData, token)
 
       
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 500))
         navigate("/customer")
       } else {
    
-        await new Promise((resolve) => setTimeout(resolve, 1500))
+        await new Promise((resolve) => setTimeout(resolve, 500))
 
       
         setIsLogin(true)
