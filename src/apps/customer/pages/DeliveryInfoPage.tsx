@@ -19,6 +19,7 @@ import {
 } from "react-international-phone"
 import "react-international-phone/style.css"
 import { toast, Toaster } from "sonner"
+import { motion } from "framer-motion"
 
 import {
   Dialog,
@@ -121,6 +122,27 @@ function PulsingDot() {
   )
 }
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      staggerChildren: 0.1,
+      when: "beforeChildren",
+    } 
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 }
+  }
+}
+
 export default function DeliveryInfoPage() {
   const navigate = useNavigate()
   const [phone, setPhone] = useState("")
@@ -135,7 +157,7 @@ export default function DeliveryInfoPage() {
 
   const [billOpen, setBillOpen] = useState(false)
   const [calculating, setCalculating] = useState(false)
-  const [billData, setBillData] = useState<any>(null)
+  const [billData, setBillData] = useState<Record<string, unknown> | null>(null)
   
   const { items } = useCartStore()
 
@@ -151,7 +173,7 @@ export default function DeliveryInfoPage() {
 
   // Triggered when the user taps "Current Location" — requests GPS permission
   // from the device, then points the marker at the user's location on the map
-  const handleUseCurrentLocation = () => {
+  const handleUseCurrentLocation = useCallback(() => {
     setLocationError(null)
 
     if (!("geolocation" in navigator)) {
@@ -199,7 +221,7 @@ export default function DeliveryInfoPage() {
         maximumAge: 0,
       }
     )
-  }
+  }, [])
 
   useEffect(() => {
     const fetchAddress = async () => {
@@ -210,7 +232,7 @@ export default function DeliveryInfoPage() {
         )
         const data = await res.json()
         setAddress(data.display_name || "Unknown Location")
-      } catch (err) {
+      } catch (_err) {
         setAddress("Location details unavailable")
       }
     }
@@ -259,7 +281,7 @@ export default function DeliveryInfoPage() {
       const responseData = response.data.data || response.data
       setBillData(responseData)
       setBillOpen(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to calculate delivery fee")
     } finally {
       setCalculating(false)
@@ -283,16 +305,23 @@ export default function DeliveryInfoPage() {
   }, [])
 
   return (
-    <div className="mx-auto w-full max-w-lg px-6 py-10">
+    <motion.div 
+      className="mx-auto w-full max-w-lg px-6 py-10"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <Toaster position="top-center" richColors />
-      <h1 className="mb-2 font-serif text-2xl font-bold">
-        Delivery Information
-      </h1>
-      <p className="mb-8 text-sm text-zinc-500">
-        Please provide your details for the rider.
-      </p>
+      <motion.div variants={itemVariants}>
+        <h1 className="mb-2 font-serif text-2xl font-bold">
+          Delivery Information
+        </h1>
+        <p className="mb-8 text-sm text-zinc-500">
+          Please provide your details for the rider.
+        </p>
+      </motion.div>
 
-      <div className="space-y-6">
+      <motion.div className="space-y-6" variants={itemVariants}>
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm font-medium text-zinc-900">
             <Phone size={16} /> Contact Phone
@@ -366,9 +395,9 @@ export default function DeliveryInfoPage() {
             <p className="text-sm font-medium text-red-500">{locationError}</p>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mt-10">
+      <motion.div className="mt-10" variants={itemVariants}>
         <Button
           className="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white shadow-lg hover:cursor-pointer hover:bg-zinc-800"
           onClick={handleConfirm}
@@ -391,7 +420,7 @@ export default function DeliveryInfoPage() {
         >
           <ArrowLeft size={16} /> Back to Checkout
         </button>
-      </div>
+      </motion.div>
 
       <Dialog open={billOpen} onOpenChange={setBillOpen}>
         <DialogContent className="sm:max-w-md">
@@ -443,7 +472,7 @@ export default function DeliveryInfoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   )
 }
 

@@ -1039,7 +1039,46 @@ export default function RiderTaskDetails() {
                         </span>
                       </div>
                     )}
-                    <div className="border-t border-slate-700/10 pt-3 mt-1 flex items-center justify-between text-sm font-bold">
+                    {(((order as any).itemsTotal !== undefined) || ((order as any).deliveryFee !== undefined) || ((order as any).totalDistanceKm !== undefined) || ((order as any).extraStops !== undefined && (order as any).extraStops > 0)) && (
+                      <div className="border-t border-slate-700/10 pt-3 mt-2 space-y-2">
+                        {((order as any).itemsTotal !== undefined) && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={`${isDark ? "text-slate-400" : "text-slate-500"}`}>{t("Items Total")}</span>
+                            <span className="font-medium">
+                              {((order as any).itemsTotal).toLocaleString()} Ks
+                            </span>
+                          </div>
+                        )}
+                        
+                        {((order as any).deliveryFee !== undefined) && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={`${isDark ? "text-slate-400" : "text-slate-500"}`}>{t("Delivery Fee")}</span>
+                            <span className="font-medium">
+                              {((order as any).deliveryFee).toLocaleString()} Ks
+                            </span>
+                          </div>
+                        )}
+
+                        {((order as any).totalDistanceKm !== undefined) && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={`${isDark ? "text-slate-400" : "text-slate-500"}`}>{t("Total Distance")}</span>
+                            <span className="font-medium">
+                              {Number((order as any).totalDistanceKm).toFixed(2)} km
+                            </span>
+                          </div>
+                        )}
+
+                        {((order as any).extraStops !== undefined && (order as any).extraStops > 0) && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className={`${isDark ? "text-slate-400" : "text-slate-500"}`}>{t("Extra Stops")}</span>
+                            <span className="font-medium">
+                              {(order as any).extraStops}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="border-t border-slate-700/10 pt-3 mt-3 flex items-center justify-between text-sm font-bold">
                       <span>{t("rider.taskDetails.totalCashCollect")}</span>
                       <span
                         className={`text-base font-bold ${isDark ? "text-cyan-400" : "text-sky-600"}`}

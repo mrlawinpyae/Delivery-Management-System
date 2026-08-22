@@ -5,6 +5,7 @@ import { MapPin, Loader2 } from "lucide-react"
 import { useEffect, useRef } from "react"
 
 import { useInfiniteRestaurants } from "../hooks/useRestaurants"
+import HeroSection from "../components/HeroSection"
 
 // Shadcn UI Components
 import { Card, CardContent } from "@/components/ui/card"
@@ -55,26 +56,37 @@ export default function BrowseRestaurants() {
 
   return (
     <div className="space-y-10">
+      {!searchTerm && <HeroSection />}
+
       <section className="space-y-6">
+        {searchTerm && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-lg font-serif text-zinc-800"
+          >
+            Search results for <span className="font-bold">"{searchTerm}"</span>
+          </motion.div>
+        )}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Use filteredRestaurants instead of restaurantList */}
           <AnimatePresence mode="popLayout">
             {filteredRestaurants.length > 0 ? (
-              filteredRestaurants.map((shop: any) => (
+              filteredRestaurants.map((shop: any, index: number) => (
                 <motion.div
                   key={shop.restaurantId}
                   layout // Enables smooth reordering animations
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
-                  whileHover={{ y: -6 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.4, delay: index * 0.1, type: "spring", stiffness: 100 }}
+                  whileHover={{ y: -8, scale: 1.02, transition: { delay: 0 } }}
                 >
                   <Link
                     to={`/customer/restaurant/${shop.restaurantId}`}
                     className="group block"
                   >
-                    <Card className="group relative h-80 overflow-hidden rounded-3xl border-0 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)]">
+                    <Card className="group relative h-80 overflow-hidden rounded-3xl border-0 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)]">
                       <div className="absolute inset-0 h-full w-full bg-zinc-900">
                         <img
                           src={shop.image ? getImageUrl(shop.image) : restLogo}
@@ -86,7 +98,7 @@ export default function BrowseRestaurants() {
 
                       <CardContent className="absolute right-0 bottom-0 left-0 z-10 space-y-4 p-5 text-white">
                         <div className="space-y-1">
-                          <h3 className="font-serif text-2xl font-bold tracking-tight text-white group-hover:text-amber-400">
+                          <h3 className="font-serif text-2xl font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors">
                             {shop.name}
                           </h3>
                           <div className="flex items-center gap-1.5 text-xs font-light text-zinc-300">
