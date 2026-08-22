@@ -53,5 +53,8 @@
   "rider.taskDetails.deliveryDestination": "Delivery Destination",
   "rider.taskDetails.recipient": "Recipient",
   "rider.taskDetails.receiptSummary": "Receipt Summary",
-  "rider.taskDetails.totalCashCollect": "Total Cash Collect"
+  "rider.taskDetails.totalCashCollect": "Total Cash Collect",
+  "Items Total": "Items Total",
+  "Delivery Fee": "Delivery Fee",
+  "Total Distance": "Total Distance"
 }

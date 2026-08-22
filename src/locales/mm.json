@@ -53,5 +53,8 @@
   "rider.taskDetails.deliveryDestination": "ပို့ဆောင်ရမည့်နေရာ",
   "rider.taskDetails.recipient": "လက်ခံမည့်သူ",
   "rider.taskDetails.receiptSummary": "ပြေစာအကျဉ်းချုပ်",
-  "rider.taskDetails.totalCashCollect": "ကောက်ခံရမည့် စုစုပေါင်းငွေ"
+  "rider.taskDetails.totalCashCollect": "ကောက်ခံရမည့် စုစုပေါင်းငွေ",
+  "Items Total": "ပစ္စည်းစုစုပေါင်း",
+  "Delivery Fee": "ပို့ဆောင်ခ",
+  "Total Distance": "စုစုပေါင်းအကွာအဝေး"
 }
